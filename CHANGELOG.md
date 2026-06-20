@@ -3,6 +3,11 @@
 All notable changes to this project are recorded here, newest first.
 Timestamps are in IST (UTC+5:30).
 
+## 2026-06-20 22:33 IST — Forgot password flow
+- Added a "Forgot password?" entry to the sign-in form that switches to a reset-request view.
+- Added the `requestPasswordReset` action (reCAPTCHA-gated, anti-enumeration generic response) that emails a reset link via `resetPasswordForEmail`, routed through `/auth/confirm` → `/auth/reset-password`.
+- Added the `/auth/reset-password` page (recovery-session guarded) and form, plus the `updatePassword` action to set a new password.
+
 ## 2026-06-20 22:26 IST — Email validation on signup
 - Added `src/lib/email-validation.ts`: format check, reserved/placeholder domain blocklist, disposable-provider blocklist, and a best-effort DNS MX deliverability check (fails open on transient DNS errors).
 - Enforced the above in the `signUp` action and normalized the email (trim + lowercase).
