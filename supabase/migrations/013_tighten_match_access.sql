@@ -1,0 +1,14 @@
+-- Remove the overly-permissive matches read policy.
+--
+-- "Anyone authenticated can read matches for RSVP" let ANY logged-in user read
+-- EVERY match in the database, regardless of group membership (cross-group leak).
+--
+-- Reads remain available to the people who should have them:
+--   * match creators and ACTIVE group members, via the
+--     "Users can read matches in joined groups" policy (migration 006), and
+--   * the SECURITY DEFINER RPC get_match_for_user, which enforces the same check.
+--
+-- RSVP no longer depends on this policy: the app now requires an existing ACTIVE
+-- membership before allowing RSVP (see isActiveMember in src/lib/match-logic.ts),
+-- so users must join via the invite + host-approval flow first.
+DROP POLICY IF EXISTS "Anyone authenticated can read matches for RSVP" ON matches;

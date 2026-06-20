@@ -29,23 +29,17 @@ export async function canManageMatch(
   return isHostOrCoHost(match.group_id, userId);
 }
 
-export async function ensureGroupMembership(groupId: string, userId: string) {
+export async function isActiveMember(groupId: string, userId: string): Promise<boolean> {
   const supabase = await createClient();
-  const { data: existing } = await supabase
+  const { data } = await supabase
     .from("group_memberships")
     .select("id")
     .eq("group_id", groupId)
     .eq("user_id", userId)
-    .single();
+    .eq("status", "ACTIVE")
+    .maybeSingle();
 
-  if (existing) return;
-
-  await supabase.from("group_memberships").insert({
-    group_id: groupId,
-    user_id: userId,
-    role: "PLAYER",
-    status: "ACTIVE",
-  });
+  return Boolean(data);
 }
 
 export async function getConfirmedCount(matchId: string): Promise<number> {

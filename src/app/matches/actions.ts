@@ -5,12 +5,15 @@ import { requireAuth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import {
-  ensureGroupMembership,
+  isActiveMember,
   getConfirmedCount,
   promoteEarliestStandby,
   isHostOrCoHost,
   canManageMatch,
 } from "@/lib/match-logic";
+
+const NOT_A_MEMBER_ERROR =
+  "You must be an approved member of this group to RSVP. Ask the host for an invite link.";
 import { buildUpiIntentUrl, generateTransactionRef, getLocalTodayDateString } from "@/lib/utils";
 import type { ParticipationStatus } from "@/lib/types/database";
 
@@ -45,7 +48,7 @@ async function upsertParticipation(
 
 export async function confirmSpot(matchId: string, groupId: string) {
   const user = await requireAuth();
-  await ensureGroupMembership(groupId, user.id);
+  if (!(await isActiveMember(groupId, user.id))) return { error: NOT_A_MEMBER_ERROR };
 
   const supabase = await createClient();
   const { data: match } = await supabase.from("matches").select("*").eq("id", matchId).single();
@@ -62,7 +65,7 @@ export async function confirmSpot(matchId: string, groupId: string) {
 
 export async function initiatePayment(matchId: string, groupId: string) {
   const user = await requireAuth();
-  await ensureGroupMembership(groupId, user.id);
+  if (!(await isActiveMember(groupId, user.id))) return { error: NOT_A_MEMBER_ERROR };
 
   const supabase = await createClient();
   const { data: match } = await supabase.from("matches").select("*").eq("id", matchId).single();
@@ -98,7 +101,7 @@ export async function initiatePayment(matchId: string, groupId: string) {
 
 export async function declineSpot(matchId: string, groupId: string) {
   const user = await requireAuth();
-  await ensureGroupMembership(groupId, user.id);
+  if (!(await isActiveMember(groupId, user.id))) return { error: NOT_A_MEMBER_ERROR };
   await upsertParticipation(matchId, user.id, "DECLINED");
   revalidatePath(`/matches/${matchId}`);
   return { success: true };
