@@ -1,0 +1,23 @@
+---
+description: Always update CHANGELOG.md when committing and pushing
+alwaysApply: true
+---
+
+# Changelog on every commit + push
+
+Whenever you create a git commit that will be pushed, you MUST record the
+change in `CHANGELOG.md` at the repo root, in the SAME commit.
+
+- Add a new entry at the TOP of the file (newest first).
+- Each entry starts with a date-time heading in IST:
+  `## YYYY-MM-DD HH:MM IST — <short title>`
+- Under it, list concise bullets describing what changed and why.
+- Stage `CHANGELOG.md` together with the code so they land in one commit.
+
+Example:
+
+```markdown
+## 2026-06-20 22:26 IST — Email validation on signup
+- Reject disposable/undeliverable emails before account creation.
+- Add /auth/confirm route to complete the email verification link.
+```
