@@ -6,6 +6,7 @@ import { requireAuth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { getLocalTodayDateString } from "@/lib/utils";
+import { verifyRecaptcha } from "@/lib/recaptcha";
 
 async function ensureUserProfile(user: { id: string; email?: string; user_metadata?: { name?: string } }) {
   const supabase = await createClient();
@@ -25,6 +26,12 @@ async function ensureUserProfile(user: { id: string; email?: string; user_metada
 }
 
 export async function createGroup(formData: FormData) {
+  const captcha = await verifyRecaptcha(
+    formData.get("recaptchaToken") as string | null,
+    "create_group"
+  );
+  if (!captcha.ok) return { error: captcha.error };
+
   const user = await requireAuth();
   const supabase = await createClient();
 

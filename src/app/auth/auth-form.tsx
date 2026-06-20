@@ -4,6 +4,7 @@ import { useState } from "react";
 import { signIn, signUp } from "./actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { executeRecaptcha } from "@/lib/recaptcha-client";
 
 export function AuthForm({ next }: { next?: string }) {
   const [mode, setMode] = useState<"signin" | "signup">("signin");
@@ -15,6 +16,10 @@ export function AuthForm({ next }: { next?: string }) {
     setLoading(true);
     setError(null);
     setMessage(null);
+    if (mode === "signup") {
+      const token = await executeRecaptcha("signup");
+      if (token) formData.set("recaptchaToken", token);
+    }
     const action = mode === "signin" ? signIn : signUp;
     const result = await action(formData);
     if (result && "error" in result && result.error) {

@@ -20,3 +20,13 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
 }
+
+/* Prevent iOS Safari from auto-zooming when focusing form controls.
+   iOS zooms in whenever an input's font-size is below 16px. */
+@media (max-width: 640px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}

@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { verifyRecaptcha } from "@/lib/recaptcha";
 
 function safeNext(formData: FormData): string {
   const next = (formData.get("next") as string) || "";
@@ -12,6 +13,12 @@ function safeNext(formData: FormData): string {
 }
 
 export async function signUp(formData: FormData) {
+  const captcha = await verifyRecaptcha(
+    formData.get("recaptchaToken") as string | null,
+    "signup"
+  );
+  if (!captcha.ok) return { error: captcha.error };
+
   const supabase = await createClient();
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;

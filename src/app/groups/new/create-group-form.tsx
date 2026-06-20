@@ -4,6 +4,7 @@ import { useState } from "react";
 import { createGroup } from "../actions";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
+import { executeRecaptcha } from "@/lib/recaptcha-client";
 
 export function CreateGroupForm() {
   const [error, setError] = useState<string | null>(null);
@@ -12,6 +13,8 @@ export function CreateGroupForm() {
   async function handleSubmit(formData: FormData) {
     setLoading(true);
     setError(null);
+    const token = await executeRecaptcha("create_group");
+    if (token) formData.set("recaptchaToken", token);
     const result = await createGroup(formData);
     if (result?.error) {
       setError(result.error);
