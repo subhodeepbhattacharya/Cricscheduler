@@ -1,5 +1,5 @@
 export type MembershipRole = "HOST" | "CO_HOST" | "PLAYER";
-export type MembershipStatus = "ACTIVE" | "LEFT" | "BANNED";
+export type MembershipStatus = "ACTIVE" | "PENDING" | "LEFT" | "BANNED";
 export type MatchStatus = "SCHEDULED" | "COMPLETED" | "CANCELLED";
 export type ParticipationStatus = "CONFIRMED" | "STANDBY" | "DECLINED" | "DROPPED_OUT";
 export type PaymentStatus = "PENDING" | "SUCCESS" | "FAILED";
@@ -20,6 +20,7 @@ export interface Group {
   description: string | null;
   created_by_user_id: string;
   whatsapp_group_link: string | null;
+  invite_token: string;
   created_at: string;
   updated_at: string;
 }
@@ -41,7 +42,7 @@ export interface Match {
   title: string;
   date: string;
   start_time: string;
-  end_time: string;
+  end_time: string | null;
   location_name: string;
   location_address: string;
   google_maps_link: string | null;

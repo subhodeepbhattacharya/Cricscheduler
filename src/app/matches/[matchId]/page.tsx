@@ -2,9 +2,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAuth } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { isHostOrCoHost, getConfirmedCount } from "@/lib/match-logic";
-import { formatDate, formatTime, formatCurrency } from "@/lib/utils";
+import { getConfirmedCount, canManageMatch } from "@/lib/match-logic";
+import { formatDate, formatMatchTime, formatCurrency } from "@/lib/utils";
 import { RsvpActions } from "@/components/rsvp-actions";
+import { DeleteMatchButton } from "@/components/delete-match-button";
+import { Button } from "@/components/ui/button";
 import { Badge, statusLabel, formatStatus } from "@/components/ui/badge";
 import type { Match, MatchParticipation, Payment } from "@/lib/types/database";
 
@@ -17,7 +19,20 @@ export default async function MatchDetailPage({
   const { matchId } = await params;
   const supabase = await createClient();
 
-  const { data: match } = await supabase.from("matches").select("*").eq("id", matchId).single();
+  const { data: rpcMatch, error: rpcError } = await supabase.rpc("get_match_for_user", {
+    p_match_id: matchId,
+  });
+
+  let match = rpcMatch as Match | null;
+  if (rpcError || !match) {
+    const { data: fallbackMatch } = await supabase
+      .from("matches")
+      .select("*")
+      .eq("id", matchId)
+      .single();
+    match = fallbackMatch as Match | null;
+  }
+
   if (!match) notFound();
 
   const { data: group } = await supabase
@@ -27,7 +42,7 @@ export default async function MatchDetailPage({
     .single();
 
   const confirmedCount = await getConfirmedCount(matchId);
-  const canManage = await isHostOrCoHost(match.group_id, user.id);
+  const canManage = await canManageMatch(match, user.id);
 
   const { data: participation } = await supabase
     .from("match_participations")
@@ -45,7 +60,7 @@ export default async function MatchDetailPage({
     .limit(1)
     .single();
 
-  const typedMatch = match as Match;
+  const typedMatch = match;
   const typedParticipation = participation as MatchParticipation | null;
   const typedPayment = latestPayment as Payment | null;
 
@@ -67,8 +82,7 @@ export default async function MatchDetailPage({
         <div>
           <p className="text-xs font-medium uppercase text-gray-400">When</p>
           <p className="text-gray-900">
-            {formatDate(typedMatch.date)} · {formatTime(typedMatch.start_time)} –{" "}
-            {formatTime(typedMatch.end_time)}
+            {formatDate(typedMatch.date)} · {formatMatchTime(typedMatch.start_time, typedMatch.end_time)}
           </p>
         </div>
         <div>
@@ -107,6 +121,17 @@ export default async function MatchDetailPage({
           </div>
         </div>
       </div>
+
+      {canManage && typedMatch.status === "SCHEDULED" && (
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <Link href={`/matches/${matchId}/edit`}>
+            <Button size="sm" variant="secondary">
+              Edit match
+            </Button>
+          </Link>
+          <DeleteMatchButton matchId={matchId} matchTitle={typedMatch.title} />
+        </div>
+      )}
 
       {canManage && (
         <Link

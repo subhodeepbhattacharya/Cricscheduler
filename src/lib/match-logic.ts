@@ -21,6 +21,14 @@ export async function isHostOrCoHost(groupId: string, userId: string): Promise<b
   return role === "HOST" || role === "CO_HOST";
 }
 
+export async function canManageMatch(
+  match: { group_id: string; created_by_user_id: string },
+  userId: string
+): Promise<boolean> {
+  if (match.created_by_user_id === userId) return true;
+  return isHostOrCoHost(match.group_id, userId);
+}
+
 export async function ensureGroupMembership(groupId: string, userId: string) {
   const supabase = await createClient();
   const { data: existing } = await supabase
@@ -42,6 +50,16 @@ export async function ensureGroupMembership(groupId: string, userId: string) {
 
 export async function getConfirmedCount(matchId: string): Promise<number> {
   const supabase = await createClient();
+
+  const { data: rpcCount, error: rpcError } = await supabase.rpc(
+    "get_confirmed_count_for_match",
+    { p_match_id: matchId }
+  );
+
+  if (!rpcError && typeof rpcCount === "number") {
+    return rpcCount;
+  }
+
   const { count } = await supabase
     .from("match_participations")
     .select("*", { count: "exact", head: true })

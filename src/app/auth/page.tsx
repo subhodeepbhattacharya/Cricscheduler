@@ -2,9 +2,16 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { AuthForm } from "./auth-form";
 
-export default async function AuthPage() {
+export default async function AuthPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  const { next } = await searchParams;
+  const safeNext = next && next.startsWith("/") && !next.startsWith("//") ? next : undefined;
+
   const user = await getCurrentUser();
-  if (user) redirect("/groups");
+  if (user) redirect(safeNext ?? "/groups");
 
   return (
     <div>
@@ -13,7 +20,7 @@ export default async function AuthPage() {
       </h1>
       <p className="mt-1 text-sm text-gray-500">Sign in or create an account to manage your cricket groups.</p>
       <div className="mt-6">
-        <AuthForm />
+        <AuthForm next={safeNext} />
       </div>
     </div>
   );

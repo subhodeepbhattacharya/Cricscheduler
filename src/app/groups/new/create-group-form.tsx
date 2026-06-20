@@ -26,7 +26,8 @@ export function CreateGroupForm() {
       <Input
         label="WhatsApp group link"
         name="whatsappGroupLink"
-        type="url"
+        type="text"
+        inputMode="url"
         placeholder="https://chat.whatsapp.com/..."
       />
       {error && <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>}

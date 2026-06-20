@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { requireAuth } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { isHostOrCoHost } from "@/lib/match-logic";
-import { CreateMatchForm } from "./create-match-form";
+import { MatchForm } from "@/components/match-form";
 
 export default async function NewMatchPage({
   params,
@@ -28,7 +28,7 @@ export default async function NewMatchPage({
       <h1 className="mt-2 text-2xl font-bold text-gray-900">Create a match</h1>
       <p className="mt-1 text-sm text-gray-500">Schedule a new cricket match for your group.</p>
       <div className="mt-6">
-        <CreateMatchForm groupId={groupId} />
+        <MatchForm mode="create" groupId={groupId} />
       </div>
     </div>
   );

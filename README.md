@@ -44,10 +44,13 @@ Edit `.env.local`:
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your-google-maps-api-key
 NEXT_PUBLIC_UPI_MERCHANT_VPA=yourname@upi
 NEXT_PUBLIC_APP_NAME=CricScheduler
 ```
+
+**Google Maps setup:** In [Google Cloud Console](https://console.cloud.google.com/google/maps-apis), enable **Maps JavaScript API** and **Places API**, create an API key, and restrict it to your domain (or `localhost` for dev).
 
 ### 4. Install and run
 

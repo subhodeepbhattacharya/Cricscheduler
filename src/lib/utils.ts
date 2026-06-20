@@ -1,3 +1,12 @@
+/** Local calendar date as YYYY-MM-DD (avoid UTC off-by-one in date filters). */
+export function getLocalTodayDateString(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 export function generateTransactionRef(): string {
   const timestamp = Date.now().toString(36);
   const random = Math.random().toString(36).substring(2, 8);
@@ -48,4 +57,13 @@ export function formatTime(timeStr: string): string {
     minute: "2-digit",
     hour12: true,
   });
+}
+
+export function formatMatchTime(startTime: string, endTime?: string | null): string {
+  const start = formatTime(startTime);
+  if (!endTime) return start;
+  const startKey = startTime.slice(0, 5);
+  const endKey = endTime.slice(0, 5);
+  if (startKey === endKey) return start;
+  return `${start} – ${formatTime(endTime)}`;
 }

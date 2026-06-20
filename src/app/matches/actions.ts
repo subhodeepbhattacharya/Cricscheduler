@@ -3,13 +3,15 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireAuth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import {
   ensureGroupMembership,
   getConfirmedCount,
   promoteEarliestStandby,
   isHostOrCoHost,
+  canManageMatch,
 } from "@/lib/match-logic";
-import { buildUpiIntentUrl, generateTransactionRef } from "@/lib/utils";
+import { buildUpiIntentUrl, generateTransactionRef, getLocalTodayDateString } from "@/lib/utils";
 import type { ParticipationStatus } from "@/lib/types/database";
 
 async function upsertParticipation(
@@ -239,4 +241,154 @@ export async function markDroppedOut(participationId: string, matchId: string) {
   revalidatePath(`/matches/${matchId}/manage`);
   revalidatePath(`/matches/${matchId}`);
   return { success: true };
+}
+
+async function getMatchForManagement(matchId: string, userId: string) {
+  const supabase = await createClient();
+
+  const { data: rpcMatch } = await supabase.rpc("get_match_for_user", {
+    p_match_id: matchId,
+  });
+
+  type ManageableMatch = {
+    id: string;
+    group_id: string;
+    created_by_user_id: string;
+    status: string;
+    date: string;
+  };
+
+  const match = rpcMatch as ManageableMatch | null;
+
+  if (!match) {
+    return { error: "Match not found." as const };
+  }
+
+  const allowed = await canManageMatch(match, userId);
+  if (!allowed) return { error: "You do not have permission to manage this match." as const };
+
+  return { match };
+}
+
+function parseMatchFormData(formData: FormData) {
+  const title = (formData.get("title") as string).trim();
+  const date = formData.get("date") as string;
+  const startTime = formData.get("startTime") as string;
+  const locationName = (formData.get("locationName") as string).trim();
+  const locationAddress = (formData.get("locationAddress") as string).trim();
+  const googleMapsLink = ((formData.get("googleMapsLink") as string) || "").trim() || null;
+  const maxPlayers = parseInt(formData.get("maxPlayers") as string, 10);
+  const feePerPlayer = parseFloat(formData.get("feePerPlayer") as string) || 0;
+  const prepaymentRequired = formData.get("prepaymentRequired") === "on";
+
+  return {
+    title,
+    date,
+    startTime,
+    locationName,
+    locationAddress,
+    googleMapsLink,
+    maxPlayers,
+    feePerPlayer,
+    prepaymentRequired,
+  };
+}
+
+export async function updateMatch(matchId: string, formData: FormData) {
+  const user = await requireAuth();
+  const result = await getMatchForManagement(matchId, user.id);
+  if ("error" in result) return { error: result.error };
+
+  const { match } = result;
+  if (match.status !== "SCHEDULED") {
+    return { error: "Only scheduled matches can be edited." };
+  }
+
+  const parsed = parseMatchFormData(formData);
+  const todayStr = getLocalTodayDateString();
+  if (parsed.date < todayStr) {
+    return { error: "Match date cannot be in the past." };
+  }
+
+  if (!parsed.locationName || !parsed.locationAddress) {
+    return { error: "Location name and address are required." };
+  }
+
+  if (parsed.maxPlayers < 2) {
+    return { error: "Max players must be at least 2." };
+  }
+
+  const confirmedCount = await getConfirmedCount(matchId);
+  if (parsed.maxPlayers < confirmedCount) {
+    return {
+      error: `Max players cannot be less than confirmed players (${confirmedCount}).`,
+    };
+  }
+
+  const supabase = await createClient();
+
+  const { error: rpcError } = await supabase.rpc("update_match_for_user", {
+    p_match_id: matchId,
+    p_title: parsed.title,
+    p_date: parsed.date,
+    p_start_time: parsed.startTime,
+    p_location_name: parsed.locationName,
+    p_location_address: parsed.locationAddress,
+    p_google_maps_link: parsed.googleMapsLink ?? "",
+    p_max_players: parsed.maxPlayers,
+    p_fee_per_player: parsed.feePerPlayer,
+    p_prepayment_required: parsed.prepaymentRequired,
+  });
+
+  if (rpcError) {
+    const rpcMissing =
+      rpcError.code === "PGRST202" ||
+      rpcError.message.includes("update_match_for_user");
+
+    if (rpcMissing) {
+      return {
+        error:
+          "Match update is not available yet. Run supabase/migrations/009_update_match_rpc.sql and 010_fix_matches_rls_recursion.sql in the Supabase SQL Editor.",
+      };
+    }
+
+    return { error: rpcError.message };
+  }
+
+  revalidatePath(`/groups/${match.group_id}`, "page");
+  revalidatePath(`/matches/${matchId}`);
+  redirect(`/matches/${matchId}`);
+}
+
+export async function deleteMatch(matchId: string) {
+  const user = await requireAuth();
+  const result = await getMatchForManagement(matchId, user.id);
+  if ("error" in result) return { error: result.error };
+
+  const { match } = result;
+  if (match.status !== "SCHEDULED") {
+    return { error: "Only scheduled matches can be deleted." };
+  }
+
+  const supabase = await createClient();
+
+  const { error: rpcError } = await supabase.rpc("delete_match_for_user", {
+    p_match_id: matchId,
+  });
+
+  if (rpcError) {
+    const rpcMissing =
+      rpcError.code === "PGRST202" ||
+      rpcError.message.includes("delete_match_for_user");
+
+    if (!rpcMissing) {
+      return { error: rpcError.message };
+    }
+
+    const { error } = await supabase.from("matches").delete().eq("id", matchId);
+    if (error) return { error: error.message };
+  }
+
+  revalidatePath(`/groups/${match.group_id}`, "page");
+  redirect(`/groups/${match.group_id}`);
 }

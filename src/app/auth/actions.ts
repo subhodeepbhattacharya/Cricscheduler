@@ -4,6 +4,13 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
+function safeNext(formData: FormData): string {
+  const next = (formData.get("next") as string) || "";
+  // Only allow same-site relative paths to avoid open redirects.
+  if (next.startsWith("/") && !next.startsWith("//")) return next;
+  return "/groups";
+}
+
 export async function signUp(formData: FormData) {
   const supabase = await createClient();
   const email = formData.get("email") as string;
@@ -26,7 +33,7 @@ export async function signUp(formData: FormData) {
     };
   }
 
-  redirect("/groups");
+  redirect(safeNext(formData));
 }
 
 export async function signIn(formData: FormData) {
@@ -37,7 +44,7 @@ export async function signIn(formData: FormData) {
   const { error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) return { error: error.message };
-  redirect("/groups");
+  redirect(safeNext(formData));
 }
 
 export async function signOut() {

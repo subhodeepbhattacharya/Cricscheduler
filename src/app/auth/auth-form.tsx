@@ -5,7 +5,7 @@ import { signIn, signUp } from "./actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-export function AuthForm() {
+export function AuthForm({ next }: { next?: string }) {
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -17,10 +17,10 @@ export function AuthForm() {
     setMessage(null);
     const action = mode === "signin" ? signIn : signUp;
     const result = await action(formData);
-    if (result?.error) {
+    if (result && "error" in result && result.error) {
       setError(result.error);
       setLoading(false);
-    } else if (result?.message) {
+    } else if (result && "message" in result && result.message) {
       setMessage(result.message);
       setMode("signin");
       setLoading(false);
@@ -51,6 +51,7 @@ export function AuthForm() {
       </div>
 
       <form action={handleSubmit} className="space-y-4">
+        {next && <input type="hidden" name="next" value={next} />}
         {mode === "signup" && (
           <Input label="Name" name="name" type="text" required placeholder="Your name" />
         )}

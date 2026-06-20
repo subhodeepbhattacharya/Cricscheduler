@@ -49,7 +49,7 @@ CREATE TABLE matches (
   title TEXT NOT NULL,
   date DATE NOT NULL,
   start_time TIME NOT NULL,
-  end_time TIME NOT NULL,
+  end_time TIME,
   location_name TEXT NOT NULL,
   location_address TEXT NOT NULL,
   google_maps_link TEXT,
@@ -191,6 +191,9 @@ CREATE POLICY "Hosts can update groups" ON cricket_groups FOR UPDATE USING (
 CREATE POLICY "Members can read group memberships" ON group_memberships FOR SELECT USING (
   is_active_group_member(group_id, auth.uid())
 );
+CREATE POLICY "Users can read own memberships" ON group_memberships FOR SELECT USING (
+  user_id = auth.uid()
+);
 CREATE POLICY "Users can join groups as player" ON group_memberships FOR INSERT WITH CHECK (
   auth.uid() = user_id AND role = 'PLAYER' AND status = 'ACTIVE'
 );
@@ -211,6 +214,9 @@ CREATE POLICY "Members can read group matches" ON matches FOR SELECT USING (
 );
 CREATE POLICY "Anyone authenticated can read matches for RSVP" ON matches FOR SELECT USING (
   auth.uid() IS NOT NULL
+);
+CREATE POLICY "Creators can read their matches" ON matches FOR SELECT USING (
+  created_by_user_id = auth.uid()
 );
 CREATE POLICY "Hosts can create matches" ON matches FOR INSERT WITH CHECK (
   is_group_host_or_cohost(group_id, auth.uid()) AND auth.uid() = created_by_user_id

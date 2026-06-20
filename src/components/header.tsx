@@ -2,10 +2,15 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 
 export async function Header() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user = null;
+
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase.auth.getUser();
+    if (!error) user = data.user;
+  } catch {
+    // Avoid taking down the whole page if auth/session refresh fails.
+  }
 
   return (
     <header className="sticky top-0 z-10 border-b border-gray-200 bg-white/95 backdrop-blur">
