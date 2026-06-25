@@ -6,7 +6,7 @@ import { getConfirmedCount, canManageMatch } from "@/lib/match-logic";
 import { formatDate, formatMatchTime, formatCurrency } from "@/lib/utils";
 import { RsvpActions } from "@/components/rsvp-actions";
 import { DeleteMatchButton } from "@/components/delete-match-button";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Badge, statusLabel, formatStatus } from "@/components/ui/badge";
 import type { Match, MatchParticipation, Payment } from "@/lib/types/database";
 
@@ -124,10 +124,11 @@ export default async function MatchDetailPage({
 
       {canManage && typedMatch.status === "SCHEDULED" && (
         <div className="mt-4 flex flex-wrap items-center gap-2">
-          <Link href={`/matches/${matchId}/edit`}>
-            <Button size="sm" variant="secondary">
-              Edit match
-            </Button>
+          <Link
+            href={`/matches/${matchId}/edit`}
+            className={buttonVariants({ size: "sm", variant: "secondary" })}
+          >
+            Edit match
           </Link>
           <DeleteMatchButton matchId={matchId} matchTitle={typedMatch.title} />
         </div>

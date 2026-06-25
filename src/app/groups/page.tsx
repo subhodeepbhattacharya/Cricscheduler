@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requireAuth } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Badge, statusLabel, formatStatus } from "@/components/ui/badge";
 import type { Group, MembershipRole } from "@/lib/types/database";
@@ -27,16 +27,16 @@ export default async function GroupsPage() {
     <div>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">My Groups</h1>
-        <Link href="/groups/new">
-          <Button size="sm">+ Create</Button>
+        <Link href="/groups/new" className={buttonVariants({ size: "sm" })}>
+          + Create
         </Link>
       </div>
 
       {groups.length === 0 ? (
         <div className="mt-12 text-center">
           <p className="text-gray-500">You haven&apos;t joined any groups yet.</p>
-          <Link href="/groups/new" className="mt-4 inline-block">
-            <Button>Create your first group</Button>
+          <Link href="/groups/new" className={buttonVariants({ className: "mt-4" })}>
+            Create your first group
           </Link>
         </div>
       ) : (

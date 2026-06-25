@@ -3,6 +3,10 @@
 All notable changes to this project are recorded here, newest first.
 Timestamps are in IST (UTC+5:30).
 
+## 2026-06-25 18:12 IST — Fix hydration error from Link-wrapped buttons
+- Added a `buttonVariants()` helper to the Button component and applied it to `<Link>` elements instead of nesting a `<button>` inside an `<a>`.
+- Removed the invalid `<a><button>` nesting (a React 19 hydration error, e.g. on the homepage "Get started" button) across the homepage, groups list, group detail, and match detail pages.
+
 ## 2026-06-20 22:33 IST — Forgot password flow
 - Added a "Forgot password?" entry to the sign-in form that switches to a reset-request view.
 - Added the `requestPasswordReset` action (reCAPTCHA-gated, anti-enumeration generic response) that emails a reset link via `resetPasswordForEmail`, routed through `/auth/confirm` → `/auth/reset-password`.

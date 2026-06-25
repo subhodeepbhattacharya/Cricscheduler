@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 
 export default async function HomePage() {
   const user = await getCurrentUser();
@@ -15,8 +15,8 @@ export default async function HomePage() {
       </p>
 
       <div className="mt-8 w-full max-w-xs space-y-3">
-        <Link href={user ? "/groups" : "/auth"}>
-          <Button size="lg">{user ? "Go to my groups" : "Get started"}</Button>
+        <Link href={user ? "/groups" : "/auth"} className={buttonVariants({ size: "lg" })}>
+          {user ? "Go to my groups" : "Get started"}
         </Link>
       </div>
 

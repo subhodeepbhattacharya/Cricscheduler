@@ -4,7 +4,7 @@ import { requireAuth } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { isHostOrCoHost, getUserGroupRole } from "@/lib/match-logic";
 import { formatDate, formatMatchTime, formatCurrency, getLocalTodayDateString } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DeleteMatchButton } from "@/components/delete-match-button";
@@ -127,8 +127,11 @@ export default async function GroupDetailPage({
       <div className="mt-6 flex items-center justify-between">
         <h2 className="text-lg font-semibold text-gray-900">Upcoming matches</h2>
         {canManage && (
-          <Link href={`/groups/${groupId}/matches/new`}>
-            <Button size="sm">+ Create match</Button>
+          <Link
+            href={`/groups/${groupId}/matches/new`}
+            className={buttonVariants({ size: "sm" })}
+          >
+            + Create match
           </Link>
         )}
       </div>
@@ -170,10 +173,11 @@ export default async function GroupDetailPage({
                 </Link>
                 {canEditMatch && (
                   <div className="mt-3 flex items-center gap-2 border-t border-gray-100 pt-3">
-                    <Link href={`/matches/${match.id}/edit`}>
-                      <Button size="sm" variant="secondary">
-                        Edit
-                      </Button>
+                    <Link
+                      href={`/matches/${match.id}/edit`}
+                      className={buttonVariants({ size: "sm", variant: "secondary" })}
+                    >
+                      Edit
                     </Link>
                     <DeleteMatchButton matchId={match.id} matchTitle={match.title} />
                   </div>
