@@ -3,6 +3,15 @@
 All notable changes to this project are recorded here, newest first.
 Timestamps are in IST (UTC+5:30).
 
+## 2026-06-25 18:34 IST — Switch to phone OTP auth (WhatsApp/SMS)
+- Replaced email/password auth with phone OTP: `sendOtp` (WhatsApp default, SMS fallback) and `verifyPhoneOtp` via Supabase + Twilio Verify.
+- New two-step auth UI (name + phone → 6-digit code, with resend/change-number); signup and sign-in are unified.
+- Added `lib/phone.ts` for E.164 normalization (defaults to +91).
+- Migration `014_phone_auth.sql`: made `users.email` nullable, added a unique `users.phone` index, and updated the pending-requests RPC to return phone.
+- `ensureUserProfile` now keys off phone; participant and pending-request lists display phone instead of email.
+- Removed email-only pieces (email validation, `/auth/confirm`, forgot-password/reset-password) and updated `ARCHITECTURE.md`.
+- Requires Supabase Phone provider + Twilio Verify (with a WhatsApp sender) to be configured to send real codes.
+
 ## 2026-06-25 18:12 IST — Fix hydration error from Link-wrapped buttons
 - Added a `buttonVariants()` helper to the Button component and applied it to `<Link>` elements instead of nesting a `<button>` inside an `<a>`.
 - Removed the invalid `<a><button>` nesting (a React 19 hydration error, e.g. on the homepage "Get started" button) across the homepage, groups list, group detail, and match detail pages.

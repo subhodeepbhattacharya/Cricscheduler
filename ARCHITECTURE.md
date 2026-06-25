@@ -11,7 +11,7 @@ ORM, or client state-management library.
 |-------|------------|
 | Frontend | Next.js 15 (App Router), React 19, TypeScript 5.8, Tailwind CSS 4 |
 | Backend | Next.js Server Components + Server Actions |
-| Auth | Supabase Auth (email + password) via `@supabase/ssr` (cookie sessions) |
+| Auth | Supabase Auth (phone OTP via WhatsApp/SMS, Twilio Verify) via `@supabase/ssr` (cookie sessions) |
 | Database | Supabase PostgreSQL with Row Level Security + SECURITY DEFINER RPCs |
 | Integrations | Google Maps Places (location picker), UPI intent deep links |
 | Tooling | ESLint 9, nvm, npm |
@@ -34,7 +34,7 @@ flowchart TB
     end
 
     subgraph Supabase["Supabase (managed)"]
-        Auth["Supabase Auth<br/>(email + password)"]
+        Auth["Supabase Auth<br/>(phone OTP: WhatsApp/SMS)"]
         subgraph PG["PostgreSQL"]
             RLS["Row Level Security<br/>policies"]
             RPC["SECURITY DEFINER RPCs<br/>(get/update/delete match,<br/>join group, approve, etc.)"]
@@ -172,7 +172,7 @@ the entry point and the **host approves each request**:
 ```
 src/
   app/
-    auth/                      Sign in / sign up (+ next redirect)
+    auth/                      Phone OTP sign in/up (+ next redirect)
     groups/                    List, create, detail, join
       [groupId]/               Group detail, matches/new
       join/[token]/            Invite landing + request to join
@@ -185,8 +185,9 @@ src/
     supabase/                  server/middleware clients
     auth.ts                    requireAuth / getCurrentUser
     match-logic.ts             role + RSVP helpers
+    phone.ts                   E.164 phone normalize/validate
     utils.ts                   formatting, UPI URL builder
-supabase/migrations/           001–012 SQL migrations (schema, RLS, RPCs)
+supabase/migrations/           001–014 SQL migrations (schema, RLS, RPCs)
 ```
 
 ## Local development

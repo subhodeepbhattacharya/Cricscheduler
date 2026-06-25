@@ -9,7 +9,7 @@ export interface PendingRequest {
   membership_id: string;
   user_id: string;
   name: string;
-  email: string;
+  phone: string | null;
   requested_at: string;
 }
 
@@ -57,7 +57,7 @@ export function PendingRequests({
           >
             <div className="min-w-0">
               <p className="truncate text-sm font-medium text-gray-900">{req.name}</p>
-              <p className="truncate text-xs text-gray-500">{req.email}</p>
+              <p className="truncate text-xs text-gray-500">{req.phone}</p>
             </div>
             <div className="flex shrink-0 items-center gap-2">
               <Button

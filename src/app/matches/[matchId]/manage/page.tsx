@@ -30,16 +30,17 @@ export default async function ManageMatchPage({
     .eq("match_id", matchId)
     .order("joined_at", { ascending: true });
 
+  type ParticipantUser = Pick<User, "id" | "name" | "phone">;
   const userIds = (participations ?? []).map((p) => p.user_id);
-  let usersMap: Record<string, User> = {};
+  let usersMap: Record<string, ParticipantUser> = {};
   if (userIds.length > 0) {
-    const { data: users } = await supabase.from("users").select("id, name, email").in("id", userIds);
+    const { data: users } = await supabase.from("users").select("id, name, phone").in("id", userIds);
     usersMap = (users ?? []).reduce(
       (acc, u) => {
-        acc[u.id] = u as User;
+        acc[u.id] = u as ParticipantUser;
         return acc;
       },
-      {} as Record<string, User>
+      {} as Record<string, ParticipantUser>
     );
   }
 
@@ -58,7 +59,7 @@ export default async function ManageMatchPage({
 
   const participants: ParticipationWithUser[] = (participations ?? []).map((p) => ({
     ...p,
-    user: usersMap[p.user_id] ?? { id: p.user_id, name: "Unknown", email: "" },
+    user: usersMap[p.user_id] ?? { id: p.user_id, name: "Unknown", phone: null },
     payment: latestPaymentByUser[p.user_id] ?? null,
   }));
 

@@ -8,7 +8,7 @@ export type PaymentProvider = "UPI_INTENT";
 export interface User {
   id: string;
   name: string;
-  email: string;
+  email: string | null;
   phone: string | null;
   created_at: string;
   updated_at: string;
@@ -88,7 +88,7 @@ export interface MatchWithCounts extends Match {
 }
 
 export interface ParticipationWithUser extends MatchParticipation {
-  user: Pick<User, "id" | "name" | "email">;
+  user: Pick<User, "id" | "name" | "phone">;
   payment: Payment | null;
 }
 

@@ -8,16 +8,24 @@ import { revalidatePath } from "next/cache";
 import { getLocalTodayDateString } from "@/lib/utils";
 import { verifyRecaptcha } from "@/lib/recaptcha";
 
-async function ensureUserProfile(user: { id: string; email?: string; user_metadata?: { name?: string } }) {
+async function ensureUserProfile(user: {
+  id: string;
+  phone?: string;
+  email?: string;
+  user_metadata?: { name?: string };
+}) {
   const supabase = await createClient();
   const { data: profile } = await supabase.from("users").select("id").eq("id", user.id).single();
 
   if (profile) return;
 
+  const phone = user.phone ? (user.phone.startsWith("+") ? user.phone : `+${user.phone}`) : null;
+
   const { error } = await supabase.from("users").insert({
     id: user.id,
-    name: user.user_metadata?.name ?? user.email?.split("@")[0] ?? "User",
-    email: user.email ?? "",
+    name: user.user_metadata?.name ?? "Player",
+    phone,
+    email: user.email ?? null,
   });
 
   if (error) {

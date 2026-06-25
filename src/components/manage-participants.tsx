@@ -78,7 +78,7 @@ export function ManageParticipants({
                   <div className="flex items-start justify-between">
                     <div>
                       <p className="font-medium text-gray-900">{p.user.name}</p>
-                      <p className="text-xs text-gray-500">{p.user.email}</p>
+                      <p className="text-xs text-gray-500">{p.user.phone}</p>
                     </div>
                     <Badge variant={statusLabel(p.status)}>{formatStatus(p.status)}</Badge>
                   </div>
