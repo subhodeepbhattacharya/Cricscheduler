@@ -3,6 +3,10 @@
 All notable changes to this project are recorded here, newest first.
 Timestamps are in IST (UTC+5:30).
 
+## 2026-06-25 19:17 IST — Fix phone signup trigger ("Database error saving new user")
+- Migration `015_phone_signup_trigger.sql`: rewrote `handle_new_user()` to support phone signups (defaults name to "Player", allows null email, stores phone with a leading "+"); re-asserts email-nullable + unique phone index so it works even without `014`.
+- Added server-side logging of the exact Supabase error in `sendOtp` to aid provider debugging.
+
 ## 2026-06-25 18:34 IST — Switch to phone OTP auth (WhatsApp/SMS)
 - Replaced email/password auth with phone OTP: `sendOtp` (WhatsApp default, SMS fallback) and `verifyPhoneOtp` via Supabase + Twilio Verify.
 - New two-step auth UI (name + phone → 6-digit code, with resend/change-number); signup and sign-in are unified.

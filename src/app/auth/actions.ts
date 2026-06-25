@@ -42,7 +42,15 @@ export async function sendOtp(formData: FormData): Promise<SendOtpResult> {
     },
   });
 
-  if (error) return { ok: false, error: error.message };
+  if (error) {
+    console.error("[sendOtp] signInWithOtp failed", {
+      channel,
+      status: error.status,
+      code: error.code,
+      message: error.message,
+    });
+    return { ok: false, error: error.message };
+  }
 
   return { ok: true, phone: normalized.phone, channel };
 }
