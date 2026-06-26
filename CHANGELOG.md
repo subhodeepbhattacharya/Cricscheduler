@@ -3,6 +3,10 @@
 All notable changes to this project are recorded here, newest first.
 Timestamps are in IST (UTC+5:30).
 
+## 2026-06-26 08:34 IST — SMS-default auth + local OTP testing docs
+- Auth form now shows both **SMS** (primary/default) and **WhatsApp** buttons; SMS-first is less error-prone on a Twilio trial (avoids the WhatsApp channel-mismatch error 21910).
+- Added a "Testing phone OTP locally" section to `ARCHITECTURE.md`: Supabase test phone numbers (no Twilio), plus SMS/WhatsApp sender setup for real delivery.
+
 ## 2026-06-26 07:48 IST — Proprietary license
 - Added a proprietary, all-rights-reserved `LICENSE` (replaces the previous MIT reference, which would have granted reuse rights).
 - README now states "Proprietary — All rights reserved" and links to `LICENSE`; `package.json` marked `"license": "UNLICENSED"`.

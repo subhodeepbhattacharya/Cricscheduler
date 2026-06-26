@@ -137,7 +137,7 @@ export function AuthForm({ next }: { next?: string }) {
         className="space-y-4"
         onSubmit={(e) => {
           e.preventDefault();
-          sendCode("whatsapp");
+          sendCode("sms");
         }}
       >
         <Input
@@ -165,21 +165,21 @@ export function AuthForm({ next }: { next?: string }) {
         )}
 
         <Button type="submit" size="lg" loading={loading}>
+          Send code via SMS
+        </Button>
+        <Button
+          type="button"
+          size="lg"
+          variant="secondary"
+          onClick={() => sendCode("whatsapp")}
+          loading={loading}
+        >
           Send code on WhatsApp
         </Button>
       </form>
 
-      <button
-        type="button"
-        onClick={() => sendCode("sms")}
-        disabled={loading}
-        className="mt-3 w-full text-center text-sm font-medium text-gray-500 hover:text-gray-700 disabled:opacity-50"
-      >
-        Use SMS instead
-      </button>
-
       <p className="mt-4 text-center text-xs text-gray-400">
-        We&apos;ll text you a one-time code to sign in. New numbers create an account automatically.
+        We&apos;ll send a one-time code to sign in. New numbers create an account automatically.
       </p>
     </div>
   );

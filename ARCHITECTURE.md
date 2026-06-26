@@ -202,6 +202,41 @@ npm run dev:clean    # clears .next cache first (use if stale-chunk errors)
 Do not run `npm run build` while `npm run dev` is running — it can corrupt the
 shared `.next` cache and cause 404/500s until cleared.
 
+## Testing phone OTP locally
+
+The OTP is sent by **Supabase's servers calling Twilio** (not the browser), so
+delivery behaves the same on `localhost` as in production. For day-to-day local
+testing, skip Twilio entirely using Supabase **test phone numbers** (fixed
+codes that never hit the provider):
+
+1. Supabase Dashboard → **Authentication → Sign In / Providers → Phone** (ensure
+   the Phone provider is enabled).
+2. In the **Test OTP** section, add a mapping, e.g. phone `+919876543210` →
+   code `123456`. (Self-hosted/CLI equivalent: the `[auth.sms.test_otp]` block
+   in `supabase/config.toml`.)
+3. In the sign-in form, enter that number, send a code (channel is irrelevant —
+   it won't call Twilio), then verify with the static code.
+
+This exercises the full sign-up → profile-creation → sign-in flow without any
+Twilio setup.
+
+### Real delivery (when validating the provider)
+
+Pick one channel and make the Twilio **sender** match it, or you'll hit Twilio
+error 21910 ("Invalid From and To pair … same channel"):
+
+- **SMS (easiest on a trial):** set the Supabase Phone provider's Twilio sender
+  to your trial **SMS** number, and **verify your test number** in the Twilio
+  console (trial only sends to verified numbers). Use the form's **Send code via
+  SMS** button.
+- **WhatsApp:** the sender must be a WhatsApp sender (e.g. the Twilio sandbox
+  `whatsapp:+14155238886`), and the recipient must first **join the sandbox**
+  (send `join <keyword>` to that number on WhatsApp). Only then will the
+  WhatsApp channel deliver.
+
+The sign-in form offers both **SMS** (default) and **WhatsApp** buttons; SMS is
+the default because it's the least error-prone on a Twilio trial.
+
 ## Deployment
 
 The app is **two managed pieces**: the Next.js frontend (any Node host) and
