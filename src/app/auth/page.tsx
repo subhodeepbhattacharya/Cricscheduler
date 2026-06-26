@@ -5,10 +5,11 @@ import { AuthForm } from "./auth-form";
 export default async function AuthPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string }>;
+  searchParams: Promise<{ next?: string; mode?: string }>;
 }) {
-  const { next } = await searchParams;
+  const { next, mode } = await searchParams;
   const safeNext = next && next.startsWith("/") && !next.startsWith("//") ? next : undefined;
+  const initialMode = mode === "signup" ? "signup" : "signin";
 
   const user = await getCurrentUser();
   if (user) redirect(safeNext ?? "/groups");
@@ -22,7 +23,7 @@ export default async function AuthPage({
         Use your phone number to manage your cricket groups.
       </p>
       <div className="mt-6">
-        <AuthForm next={safeNext} />
+        <AuthForm next={safeNext} initialMode={initialMode} />
       </div>
     </div>
   );

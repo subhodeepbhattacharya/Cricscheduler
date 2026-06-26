@@ -10,8 +10,8 @@ type Channel = "whatsapp" | "sms";
 
 type Mode = "signin" | "signup";
 
-export function AuthForm({ next }: { next?: string }) {
-  const [mode, setMode] = useState<Mode>("signin");
+export function AuthForm({ next, initialMode = "signin" }: { next?: string; initialMode?: Mode }) {
+  const [mode, setMode] = useState<Mode>(initialMode);
   const [step, setStep] = useState<"request" | "verify">("request");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");

@@ -15,9 +15,23 @@ export default async function HomePage() {
       </p>
 
       <div className="mt-8 w-full max-w-xs space-y-3">
-        <Link href={user ? "/groups" : "/auth"} className={buttonVariants({ size: "lg" })}>
-          {user ? "Go to my groups" : "Get started"}
-        </Link>
+        {user ? (
+          <Link href="/groups" className={buttonVariants({ size: "lg" })}>
+            Go to my groups
+          </Link>
+        ) : (
+          <>
+            <Link href="/auth" className={buttonVariants({ size: "lg" })}>
+              Sign in
+            </Link>
+            <p className="text-center text-sm text-gray-500">
+              Or{" "}
+              <Link href="/auth?mode=signup" className="font-medium text-green-700 hover:underline">
+                sign up instead
+              </Link>
+            </p>
+          </>
+        )}
       </div>
 
       <div className="mt-12 grid w-full gap-4 text-left">

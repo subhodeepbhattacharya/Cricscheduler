@@ -3,6 +3,10 @@
 All notable changes to this project are recorded here, newest first.
 Timestamps are in IST (UTC+5:30).
 
+## 2026-06-26 — Homepage sign-in CTA
+- Replaced "Get started" with **Sign in**; added **Or sign up instead** link to `/auth?mode=signup`.
+- Auth page reads `?mode=signup` to open the sign-up form by default.
+
 ## 2026-06-26 — About page + site footer
 - Added `/about` with product overview, how-it-works, phone sign-in, and WhatsApp/group notes.
 - Site footer on all pages with an About link and copyright line.
