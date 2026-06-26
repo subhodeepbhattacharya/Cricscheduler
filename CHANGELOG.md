@@ -3,6 +3,14 @@
 All notable changes to this project are recorded here, newest first.
 Timestamps are in IST (UTC+5:30).
 
+## 2026-06-26 09:07 IST — UPI prepayment uses a total amount split per player
+- When "Require UPI prepayment" is on, the host now enters a **Total amount (₹)**; the form derives **fee per player = total ÷ max players** (rounded **up** to the nearest paisa so the full total is always covered) and shows it live, including the collected total when it exceeds the entered amount. The derived per-player fee is what's stored/charged.
+- Requires total > ₹0 and ≥ 2 players; server-side fee check in `createMatch`/`updateMatch` remains as a backstop. When prepayment is off, the optional flat "Fee per player" field is unchanged.
+
+## 2026-06-26 08:58 IST — Separate sign-in / sign-up modes
+- Auth form now has a **Sign in / Sign up** toggle. Sign up asks for name + phone (name required); sign in asks only for phone — returning users no longer re-enter their name.
+- Name is only sent to the OTP request in sign-up mode; neutralized the auth page subtitle.
+
 ## 2026-06-26 08:34 IST — SMS-default auth + local OTP testing docs
 - Auth form now shows both **SMS** (primary/default) and **WhatsApp** buttons; SMS-first is less error-prone on a Twilio trial (avoids the WhatsApp channel-mismatch error 21910).
 - Added a "Testing phone OTP locally" section to `ARCHITECTURE.md`: Supabase test phone numbers (no Twilio), plus SMS/WhatsApp sender setup for real delivery.

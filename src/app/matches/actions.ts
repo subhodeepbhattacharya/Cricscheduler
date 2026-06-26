@@ -321,6 +321,10 @@ export async function updateMatch(matchId: string, formData: FormData) {
     return { error: "Max players must be at least 2." };
   }
 
+  if (parsed.prepaymentRequired && parsed.feePerPlayer <= 0) {
+    return { error: "Fee per player must be greater than ₹0 when UPI prepayment is required." };
+  }
+
   const confirmedCount = await getConfirmedCount(matchId);
   if (parsed.maxPlayers < confirmedCount) {
     return {

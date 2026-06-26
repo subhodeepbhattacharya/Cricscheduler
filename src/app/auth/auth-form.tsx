@@ -8,7 +8,10 @@ import { executeRecaptcha } from "@/lib/recaptcha-client";
 
 type Channel = "whatsapp" | "sms";
 
+type Mode = "signin" | "signup";
+
 export function AuthForm({ next }: { next?: string }) {
+  const [mode, setMode] = useState<Mode>("signin");
   const [step, setStep] = useState<"request" | "verify">("request");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -20,14 +23,20 @@ export function AuthForm({ next }: { next?: string }) {
   const [loading, setLoading] = useState(false);
 
   async function sendCode(viaChannel: Channel) {
-    setLoading(true);
     setError(null);
     setMessage(null);
+
+    if (mode === "signup" && !name.trim()) {
+      setError("Please enter your name to create an account.");
+      return;
+    }
+
+    setLoading(true);
 
     const token = await executeRecaptcha("send_otp");
     const fd = new FormData();
     fd.set("phone", phone);
-    if (name) fd.set("name", name);
+    if (mode === "signup" && name.trim()) fd.set("name", name.trim());
     fd.set("channel", viaChannel);
     if (token) fd.set("recaptchaToken", token);
     if (next) fd.set("next", next);
@@ -131,8 +140,35 @@ export function AuthForm({ next }: { next?: string }) {
     );
   }
 
+  function switchMode(next: Mode) {
+    setMode(next);
+    setError(null);
+    setMessage(null);
+  }
+
   return (
     <div>
+      <div className="mb-5 grid grid-cols-2 gap-1 rounded-lg bg-gray-100 p-1">
+        <button
+          type="button"
+          onClick={() => switchMode("signin")}
+          className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+            mode === "signin" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          Sign in
+        </button>
+        <button
+          type="button"
+          onClick={() => switchMode("signup")}
+          className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+            mode === "signup" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          Sign up
+        </button>
+      </div>
+
       <form
         className="space-y-4"
         onSubmit={(e) => {
@@ -140,14 +176,17 @@ export function AuthForm({ next }: { next?: string }) {
           sendCode("sms");
         }}
       >
-        <Input
-          label="Name"
-          name="name"
-          type="text"
-          placeholder="Your name (new accounts)"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
+        {mode === "signup" && (
+          <Input
+            label="Name"
+            name="name"
+            type="text"
+            required
+            placeholder="Your name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+        )}
         <Input
           label="Phone number"
           name="phone"
@@ -179,7 +218,9 @@ export function AuthForm({ next }: { next?: string }) {
       </form>
 
       <p className="mt-4 text-center text-xs text-gray-400">
-        We&apos;ll send a one-time code to sign in. New numbers create an account automatically.
+        {mode === "signup"
+          ? "We'll send a one-time code to create your account."
+          : "We'll send a one-time code to sign in to your account."}
       </p>
     </div>
   );

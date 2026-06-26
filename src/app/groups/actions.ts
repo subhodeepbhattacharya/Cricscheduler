@@ -89,6 +89,10 @@ export async function createMatch(groupId: string, formData: FormData) {
   const feePerPlayer = parseFloat(formData.get("feePerPlayer") as string) || 0;
   const prepaymentRequired = formData.get("prepaymentRequired") === "on";
 
+  if (prepaymentRequired && feePerPlayer <= 0) {
+    return { error: "Fee per player must be greater than ₹0 when UPI prepayment is required." };
+  }
+
   const matchId = randomUUID();
 
   const { error } = await supabase.from("matches").insert({

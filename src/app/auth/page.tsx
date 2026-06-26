@@ -19,7 +19,7 @@ export default async function AuthPage({
         {`Welcome to CricScheduler`}
       </h1>
       <p className="mt-1 text-sm text-gray-500">
-        Sign in with your phone number to manage your cricket groups.
+        Use your phone number to manage your cricket groups.
       </p>
       <div className="mt-6">
         <AuthForm next={safeNext} />
