@@ -3,6 +3,10 @@
 All notable changes to this project are recorded here, newest first.
 Timestamps are in IST (UTC+5:30).
 
+## 2026-06-26 07:35 IST — Remove reCAPTCHA from group creation
+- Dropped the reCAPTCHA check on `createGroup` (server action + create-group form): once a user is OTP-verified, bot-created groups are already gated by phone verification, making it redundant.
+- reCAPTCHA remains on the `send_otp` flow, where it still protects against SMS pumping / OTP bombing (Twilio spend).
+
 ## 2026-06-25 19:17 IST — Fix phone signup trigger ("Database error saving new user")
 - Migration `015_phone_signup_trigger.sql`: rewrote `handle_new_user()` to support phone signups (defaults name to "Player", allows null email, stores phone with a leading "+"); re-asserts email-nullable + unique phone index so it works even without `014`.
 - Added server-side logging of the exact Supabase error in `sendOtp` to aid provider debugging.
