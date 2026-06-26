@@ -187,7 +187,7 @@ src/
     match-logic.ts             role + RSVP helpers
     phone.ts                   E.164 phone normalize/validate
     utils.ts                   formatting, UPI URL builder
-supabase/migrations/           001–014 SQL migrations (schema, RLS, RPCs)
+supabase/migrations/           001–015 SQL migrations (schema, RLS, RPCs)
 ```
 
 ## Local development
@@ -201,3 +201,54 @@ npm run dev:clean    # clears .next cache first (use if stale-chunk errors)
 
 Do not run `npm run build` while `npm run dev` is running — it can corrupt the
 shared `.next` cache and cause 404/500s until cleared.
+
+## Deployment
+
+The app is **two managed pieces**: the Next.js frontend (any Node host) and
+Supabase (database + auth). Supabase does **not** host the Next.js app, so a
+"100% Supabase" deployment isn't possible without rewriting the app as a static
+SPA — keep them separate.
+
+**Recommended: Vercel (frontend) + Supabase (backend).** Vercel is built by the
+Next.js team and supports App Router, Server Actions, middleware, and image
+optimization with zero config. DigitalOcean App Platform is a fine alternative
+(predictable flat pricing, full Node support); Heroku works but is the weakest
+fit and has no free tier.
+
+### Deploy to Vercel
+
+1. Push to GitHub (already done), then **New Project** in Vercel and import the
+   repo. Vercel auto-detects Next.js — no build config needed.
+2. Add the environment variables below (Project → Settings → Environment
+   Variables) for the Production (and Preview) environments.
+3. Deploy. Vercel gives you a `*.vercel.app` URL; add a custom domain later if
+   desired.
+
+### Required environment variables
+
+| Variable | Where | Notes |
+|----------|-------|-------|
+| `NEXT_PUBLIC_SUPABASE_URL` | client + server | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | client + server | Supabase publishable (anon) key |
+| `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | client | Maps Places (restrict by HTTP referrer) |
+| `NEXT_PUBLIC_UPI_MERCHANT_VPA` | client | Host UPI VPA used to build `upi://pay` links |
+| `NEXT_PUBLIC_APP_NAME` | client | App display name (e.g. CricScheduler) |
+| `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` | client | reCAPTCHA v3 site key |
+| `RECAPTCHA_SECRET_KEY` | server only | reCAPTCHA v3 secret key |
+| `RECAPTCHA_MIN_SCORE` | server only | Min score to accept (default 0.5); captcha is skipped if keys are unset |
+
+See `.env.example` for the authoritative list.
+
+### Post-deploy checklist
+
+1. **Supabase Auth → URL Configuration**: set the **Site URL** to your
+   production domain and add it (plus `*.vercel.app` preview URLs) to **Redirect
+   URLs**, so OTP/auth redirects work in production.
+2. **Run migrations** against the production database: apply
+   `supabase/migrations/001`–`015` (Supabase SQL Editor or `supabase db push`).
+3. **reCAPTCHA**: add the production domain to the allowed domains in the
+   reCAPTCHA admin console.
+4. **Google Maps**: add the production domain to the API key's HTTP referrer
+   restrictions.
+5. **Twilio Verify** (phone OTP): confirm the WhatsApp/SMS sender and Verify
+   service are live (not in trial/sandbox) for real users.

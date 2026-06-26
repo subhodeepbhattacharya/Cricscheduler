@@ -3,6 +3,9 @@
 All notable changes to this project are recorded here, newest first.
 Timestamps are in IST (UTC+5:30).
 
+## 2026-06-26 07:37 IST — Document deployment
+- Added a Deployment section to `ARCHITECTURE.md`: Vercel + Supabase recommendation, required env vars table, and a post-deploy checklist (Supabase Auth URLs, migrations, reCAPTCHA/Maps domain restrictions, Twilio Verify).
+
 ## 2026-06-26 07:35 IST — Remove reCAPTCHA from group creation
 - Dropped the reCAPTCHA check on `createGroup` (server action + create-group form): once a user is OTP-verified, bot-created groups are already gated by phone verification, making it redundant.
 - reCAPTCHA remains on the `send_otp` flow, where it still protects against SMS pumping / OTP bombing (Twilio spend).
