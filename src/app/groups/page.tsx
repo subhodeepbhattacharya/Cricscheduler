@@ -58,6 +58,10 @@ export default async function GroupsPage() {
           ))}
         </div>
       )}
+
+      <p className="mt-8 text-center text-xs text-gray-400">
+        A group is usually linked to one WhatsApp group.
+      </p>
     </div>
   );
 }

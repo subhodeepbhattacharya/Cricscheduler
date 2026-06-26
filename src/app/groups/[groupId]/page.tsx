@@ -106,7 +106,25 @@ export default async function GroupDetailPage({
           )}
         </div>
         {canDeleteGroup && (
-          <DeleteGroupButton groupId={group.id} groupName={group.name} />
+          <div className="flex shrink-0 flex-col items-end gap-2">
+            {canManage && (
+              <Link
+                href={`/groups/${group.id}/edit`}
+                className={buttonVariants({ size: "sm", variant: "secondary" })}
+              >
+                Edit group
+              </Link>
+            )}
+            <DeleteGroupButton groupId={group.id} groupName={group.name} />
+          </div>
+        )}
+        {!canDeleteGroup && canManage && (
+          <Link
+            href={`/groups/${group.id}/edit`}
+            className={buttonVariants({ size: "sm", variant: "secondary" })}
+          >
+            Edit group
+          </Link>
         )}
       </div>
 

@@ -3,6 +3,10 @@
 All notable changes to this project are recorded here, newest first.
 Timestamps are in IST (UTC+5:30).
 
+## 2026-06-26 — Edit group (hosts/co-hosts)
+- Hosts and co-hosts can edit a group at `/groups/[groupId]/edit`: update name, description, and WhatsApp group link (optional) after creation.
+- Shared `GroupForm` for create and edit; create form label now says "WhatsApp group link (optional)".
+
 ## 2026-06-26 09:28 IST — Upcoming matches grouped by date
 - Upcoming matches on the group page are now grouped by date/day; tap a date header to expand and see all matches scheduled that day (nearest date expanded by default).
 

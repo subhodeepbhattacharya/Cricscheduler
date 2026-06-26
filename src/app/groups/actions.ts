@@ -6,6 +6,7 @@ import { requireAuth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { getLocalTodayDateString } from "@/lib/utils";
+import { isHostOrCoHost } from "@/lib/match-logic";
 
 async function ensureUserProfile(user: {
   id: string;
@@ -66,6 +67,38 @@ export async function createGroup(formData: FormData) {
   if (membershipError) return { error: membershipError.message };
 
   revalidatePath("/groups");
+  redirect(`/groups/${groupId}`);
+}
+
+export async function updateGroup(groupId: string, formData: FormData) {
+  const user = await requireAuth();
+  const supabase = await createClient();
+
+  const canManage = await isHostOrCoHost(groupId, user.id);
+  if (!canManage) {
+    return { error: "Only the group host can edit this group." };
+  }
+
+  const name = (formData.get("name") as string).trim();
+  if (!name) return { error: "Group name is required." };
+
+  const description = ((formData.get("description") as string) || "").trim() || null;
+  const whatsappRaw = ((formData.get("whatsappGroupLink") as string) || "").trim();
+  const whatsappGroupLink = whatsappRaw || null;
+
+  const { error } = await supabase
+    .from("cricket_groups")
+    .update({
+      name,
+      description,
+      whatsapp_group_link: whatsappGroupLink,
+    })
+    .eq("id", groupId);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/groups");
+  revalidatePath(`/groups/${groupId}`, "page");
   redirect(`/groups/${groupId}`);
 }
 
