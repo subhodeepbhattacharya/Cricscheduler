@@ -99,4 +99,6 @@ In Supabase Dashboard → **Authentication → Providers → Email**, disable "C
 
 ## License
 
-MIT
+**Proprietary — All rights reserved.** This is not open-source software. You
+may not use, copy, modify, or deploy it without prior written permission. See
+[LICENSE](./LICENSE).
