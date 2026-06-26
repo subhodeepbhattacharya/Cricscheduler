@@ -3,6 +3,11 @@
 All notable changes to this project are recorded here, newest first.
 Timestamps are in IST (UTC+5:30).
 
+## 2026-06-26 — About page + site footer
+- Added `/about` with product overview, how-it-works, phone sign-in, and WhatsApp/group notes.
+- Site footer on all pages with an About link and copyright line.
+- Contact email on About is obfuscated (`[at]` / `[dot]`, no `mailto:` in HTML); click still opens the mail client.
+
 ## 2026-06-26 — Edit group (hosts/co-hosts)
 - Hosts and co-hosts can edit a group at `/groups/[groupId]/edit`: update name, description, and WhatsApp group link (optional) after creation.
 - Shared `GroupForm` for create and edit; create form label now says "WhatsApp group link (optional)".
