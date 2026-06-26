@@ -3,6 +3,9 @@
 All notable changes to this project are recorded here, newest first.
 Timestamps are in IST (UTC+5:30).
 
+## 2026-06-26 09:28 IST — Upcoming matches grouped by date
+- Upcoming matches on the group page are now grouped by date/day; tap a date header to expand and see all matches scheduled that day (nearest date expanded by default).
+
 ## 2026-06-26 09:23 IST — Inline confirmation for deleting a match
 - Replaced the native `window.confirm` on the delete-match button with an inline "Yes, delete / Cancel" confirmation (matches the delete-group pattern), so hosts can't delete a match in a single click.
 

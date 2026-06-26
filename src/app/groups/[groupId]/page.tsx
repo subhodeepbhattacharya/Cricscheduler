@@ -3,14 +3,14 @@ import { notFound } from "next/navigation";
 import { requireAuth } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { isHostOrCoHost, getUserGroupRole } from "@/lib/match-logic";
-import { formatDate, formatMatchTime, formatCurrency, isMatchElapsed, getMatchStartMs } from "@/lib/utils";
+import { formatDate, formatMatchTime, isMatchElapsed, getMatchStartMs } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { DeleteMatchButton } from "@/components/delete-match-button";
 import { DeleteGroupButton } from "@/components/delete-group-button";
 import { InviteShare } from "@/components/invite-share";
 import { PendingRequests, type PendingRequest } from "@/components/pending-requests";
+import { UpcomingMatchesByDate } from "@/components/upcoming-matches-by-date";
 import type { Match } from "@/lib/types/database";
 
 export const dynamic = "force-dynamic";
@@ -139,49 +139,12 @@ export default async function GroupDetailPage({
             : "No upcoming matches scheduled."}
         </p>
       ) : (
-        <div className="mt-4 space-y-3">
-          {upcomingMatches.map((match) => {
-            const canEditMatch =
-              canManage || match.created_by_user_id === user.id;
-
-            return (
-              <Card key={match.id}>
-                <Link href={`/matches/${match.id}`}>
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <CardTitle>{match.title}</CardTitle>
-                      <CardDescription>
-                        {formatDate(match.date)} · {formatMatchTime(match.start_time, match.end_time)}
-                      </CardDescription>
-                      <CardDescription>{match.location_name}</CardDescription>
-                    </div>
-                    <div className="text-right">
-                      <Badge variant="confirmed">
-                        {confirmedCounts[match.id] ?? 0} / {match.max_players}
-                      </Badge>
-                      {Number(match.fee_per_player) > 0 && (
-                        <p className="mt-1 text-xs text-gray-500">
-                          {formatCurrency(Number(match.fee_per_player))}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </Link>
-                {canEditMatch && (
-                  <div className="mt-3 flex items-center gap-2 border-t border-gray-100 pt-3">
-                    <Link
-                      href={`/matches/${match.id}/edit`}
-                      className={buttonVariants({ size: "sm", variant: "secondary" })}
-                    >
-                      Edit
-                    </Link>
-                    <DeleteMatchButton matchId={match.id} matchTitle={match.title} />
-                  </div>
-                )}
-              </Card>
-            );
-          })}
-        </div>
+        <UpcomingMatchesByDate
+          matches={upcomingMatches}
+          confirmedCounts={confirmedCounts}
+          canManage={canManage}
+          userId={user.id}
+        />
       )}
 
       {pastMatches.length > 0 && (
