@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { requireAuth } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { isHostOrCoHost, getUserGroupRole } from "@/lib/match-logic";
-import { formatDate, formatMatchTime, formatCurrency, getLocalTodayDateString } from "@/lib/utils";
+import { formatDate, formatMatchTime, formatCurrency, isMatchElapsed, getMatchStartMs } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -39,28 +39,24 @@ export default async function GroupDetailPage({
     pendingRequests = (data as PendingRequest[] | null) ?? [];
   }
 
-  const today = getLocalTodayDateString();
+  const { data: allMatches, error: matchesError } = await supabase
+    .from("matches")
+    .select("*")
+    .eq("group_id", groupId)
+    .order("date", { ascending: true })
+    .order("start_time", { ascending: true });
 
-  const { data: matches, error: matchesError } = await supabase.rpc(
-    "get_group_upcoming_matches",
-    {
-      p_group_id: groupId,
-      p_from_date: today,
-    }
-  );
+  const matchList: Match[] = (allMatches as Match[] | null) ?? [];
 
-  // Fallback if RPC not deployed yet
-  let upcomingMatches: Match[] = (matches as Match[] | null) ?? [];
-  if (matchesError) {
-    const { data: fallbackMatches } = await supabase
-      .from("matches")
-      .select("*")
-      .eq("group_id", groupId)
-      .eq("status", "SCHEDULED")
-      .gte("date", today)
-      .order("date", { ascending: true });
-    upcomingMatches = fallbackMatches ?? [];
-  }
+  // Upcoming = scheduled and not yet started; Past = already elapsed (or no
+  // longer scheduled). Sort upcoming soonest-first, past most-recent-first.
+  const upcomingMatches = matchList
+    .filter((m) => m.status === "SCHEDULED" && !isMatchElapsed(m.date, m.start_time))
+    .sort((a, b) => getMatchStartMs(a.date, a.start_time) - getMatchStartMs(b.date, b.start_time));
+
+  const pastMatches = matchList
+    .filter((m) => !(m.status === "SCHEDULED" && !isMatchElapsed(m.date, m.start_time)))
+    .sort((a, b) => getMatchStartMs(b.date, b.start_time) - getMatchStartMs(a.date, a.start_time));
 
   const { count: memberCount } = await supabase
     .from("group_memberships")
@@ -68,7 +64,7 @@ export default async function GroupDetailPage({
     .eq("group_id", groupId)
     .eq("status", "ACTIVE");
 
-  const matchIds = upcomingMatches.map((m) => m.id);
+  const matchIds = matchList.map((m) => m.id);
   let confirmedCounts: Record<string, number> = {};
 
   if (matchIds.length > 0) {
@@ -138,8 +134,8 @@ export default async function GroupDetailPage({
 
       {upcomingMatches.length === 0 ? (
         <p className="mt-4 text-sm text-gray-500">
-          {matchesError && upcomingMatches.length === 0
-            ? "Could not load matches. Run supabase/migrations/006_get_group_matches_rpc.sql in Supabase SQL Editor, then refresh."
+          {matchesError
+            ? "Could not load matches. Please refresh."
             : "No upcoming matches scheduled."}
         </p>
       ) : (
@@ -186,6 +182,37 @@ export default async function GroupDetailPage({
             );
           })}
         </div>
+      )}
+
+      {pastMatches.length > 0 && (
+        <>
+          <h2 className="mt-8 text-lg font-semibold text-gray-900">Past matches</h2>
+          <div className="mt-4 space-y-3">
+            {pastMatches.map((match) => (
+              <Card key={match.id} className="opacity-75">
+                <Link href={`/matches/${match.id}`}>
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <CardTitle>{match.title}</CardTitle>
+                      <CardDescription>
+                        {formatDate(match.date)} · {formatMatchTime(match.start_time, match.end_time)}
+                      </CardDescription>
+                      <CardDescription>{match.location_name}</CardDescription>
+                    </div>
+                    <div className="text-right">
+                      <Badge variant={match.status === "CANCELLED" ? "cancelled" : "completed"}>
+                        {match.status === "CANCELLED" ? "Cancelled" : "Ended"}
+                      </Badge>
+                      <p className="mt-1 text-xs text-gray-500">
+                        {confirmedCounts[match.id] ?? 0} / {match.max_players} played
+                      </p>
+                    </div>
+                  </div>
+                </Link>
+              </Card>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );

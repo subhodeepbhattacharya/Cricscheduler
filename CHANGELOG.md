@@ -3,6 +3,14 @@
 All notable changes to this project are recorded here, newest first.
 Timestamps are in IST (UTC+5:30).
 
+## 2026-06-26 09:23 IST — Inline confirmation for deleting a match
+- Replaced the native `window.confirm` on the delete-match button with an inline "Yes, delete / Cancel" confirmation (matches the delete-group pattern), so hosts can't delete a match in a single click.
+
+## 2026-06-26 09:14 IST — Past matches section; block joining elapsed matches
+- Group page now splits matches into **Upcoming** (scheduled, not yet started) and **Past matches** (elapsed/cancelled), comparing the match start instant in IST so it's correct regardless of server timezone.
+- Elapsed matches can no longer be joined: the RSVP panel shows "This match has ended" instead of action buttons, and `confirmSpot`/`initiatePayment` reject elapsed matches server-side.
+- Added `isMatchElapsed` / `getMatchStartMs` helpers in `lib/utils.ts`.
+
 ## 2026-06-26 09:07 IST — UPI prepayment uses a total amount split per player
 - When "Require UPI prepayment" is on, the host now enters a **Total amount (₹)**; the form derives **fee per player = total ÷ max players** (rounded **up** to the nearest paisa so the full total is always covered) and shows it live, including the collected total when it exceeds the entered amount. The derived per-player fee is what's stored/charged.
 - Requires total > ₹0 and ≥ 2 players; server-side fee check in `createMatch`/`updateMatch` remains as a backstop. When prepayment is off, the optional flat "Fee per player" field is unchanged.

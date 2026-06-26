@@ -14,7 +14,14 @@ import {
 
 const NOT_A_MEMBER_ERROR =
   "You must be an approved member of this group to RSVP. Ask the host for an invite link.";
-import { buildUpiIntentUrl, generateTransactionRef, getLocalTodayDateString } from "@/lib/utils";
+import {
+  buildUpiIntentUrl,
+  generateTransactionRef,
+  getLocalTodayDateString,
+  isMatchElapsed,
+} from "@/lib/utils";
+
+const MATCH_ELAPSED_ERROR = "This match has already started and can no longer be joined.";
 import type { ParticipationStatus } from "@/lib/types/database";
 
 async function upsertParticipation(
@@ -53,6 +60,7 @@ export async function confirmSpot(matchId: string, groupId: string) {
   const supabase = await createClient();
   const { data: match } = await supabase.from("matches").select("*").eq("id", matchId).single();
   if (!match) return { error: "Match not found" };
+  if (isMatchElapsed(match.date, match.start_time)) return { error: MATCH_ELAPSED_ERROR };
 
   const confirmedCount = await getConfirmedCount(matchId);
   const status: ParticipationStatus =
@@ -70,6 +78,7 @@ export async function initiatePayment(matchId: string, groupId: string) {
   const supabase = await createClient();
   const { data: match } = await supabase.from("matches").select("*").eq("id", matchId).single();
   if (!match) return { error: "Match not found" };
+  if (isMatchElapsed(match.date, match.start_time)) return { error: MATCH_ELAPSED_ERROR };
   if (!match.prepayment_required) return { error: "Prepayment not required" };
 
   const transactionRef = generateTransactionRef();

@@ -1,3 +1,20 @@
+// The app's audience is India; match date/time are entered as IST wall-clock.
+// Interpreting them with a fixed IST offset makes "has it started?" correct
+// regardless of where the server runs (e.g. Vercel in UTC).
+const APP_TZ_OFFSET = "+05:30";
+
+/** Epoch ms for a match's start instant, treating the stored time as IST. */
+export function getMatchStartMs(dateStr: string, startTime: string | null | undefined): number {
+  const hhmm = (startTime ?? "00:00").slice(0, 5);
+  return new Date(`${dateStr}T${hhmm}:00${APP_TZ_OFFSET}`).getTime();
+}
+
+/** True once a match's scheduled start date/time has passed. */
+export function isMatchElapsed(dateStr: string, startTime: string | null | undefined): boolean {
+  const startMs = getMatchStartMs(dateStr, startTime);
+  return !Number.isNaN(startMs) && startMs < Date.now();
+}
+
 /** Local calendar date as YYYY-MM-DD (avoid UTC off-by-one in date filters). */
 export function getLocalTodayDateString(): string {
   const now = new Date();

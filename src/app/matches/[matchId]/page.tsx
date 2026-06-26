@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { requireAuth } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { getConfirmedCount, canManageMatch } from "@/lib/match-logic";
-import { formatDate, formatMatchTime, formatCurrency } from "@/lib/utils";
+import { formatDate, formatMatchTime, formatCurrency, isMatchElapsed } from "@/lib/utils";
 import { RsvpActions } from "@/components/rsvp-actions";
 import { DeleteMatchButton } from "@/components/delete-match-button";
 import { buttonVariants } from "@/components/ui/button";
@@ -153,6 +153,7 @@ export default async function MatchDetailPage({
           maxPlayers={typedMatch.max_players}
           participation={typedParticipation}
           latestPayment={typedPayment}
+          elapsed={isMatchElapsed(typedMatch.date, typedMatch.start_time)}
         />
       </div>
     </div>

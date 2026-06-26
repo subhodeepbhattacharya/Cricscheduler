@@ -19,6 +19,7 @@ interface RsvpActionsProps {
   maxPlayers: number;
   participation: MatchParticipation | null;
   latestPayment: Payment | null;
+  elapsed?: boolean;
 }
 
 export function RsvpActions({
@@ -29,6 +30,7 @@ export function RsvpActions({
   maxPlayers,
   participation,
   latestPayment,
+  elapsed = false,
 }: RsvpActionsProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,6 +39,21 @@ export function RsvpActions({
 
   const isFull = confirmedCount >= maxPlayers;
   const status = participation?.status;
+
+  if (elapsed) {
+    return (
+      <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+        <p className="text-sm font-medium text-gray-700">This match has ended.</p>
+        <p className="mt-1 text-sm text-gray-500">RSVPs are closed.</p>
+        {status && (
+          <div className="mt-3 flex items-center gap-2">
+            <span className="text-sm text-gray-600">Your status:</span>
+            <Badge variant={statusLabel(status)}>{formatStatus(status)}</Badge>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   function applyError(result: { error?: string; success?: boolean } | void) {
     if (result?.error) setError(result.error);
