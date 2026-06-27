@@ -36,9 +36,13 @@ export function RsvpActions({
   const [error, setError] = useState<string | null>(null);
   const [paymentPending, setPaymentPending] = useState(false);
   const [transactionRef, setTransactionRef] = useState<string | null>(null);
+  const [confirmingDropOut, setConfirmingDropOut] = useState(false);
 
   const isFull = confirmedCount >= maxPlayers;
   const status = participation?.status;
+  const canRespond = !status || status === "DECLINED" || status === "DROPPED_OUT";
+  const canRejoinWithPriorPayment =
+    prepaymentRequired && latestPayment?.status === "SUCCESS";
 
   if (elapsed) {
     return (
@@ -96,7 +100,12 @@ export function RsvpActions({
     setLoading(true);
     setError(null);
     const result = await dropOut(matchId);
-    applyError(result);
+    if (result?.error) {
+      applyError(result);
+      setLoading(false);
+      return;
+    }
+    setConfirmingDropOut(false);
     setLoading(false);
   }
 
@@ -136,21 +145,26 @@ export function RsvpActions({
 
       {error && <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>}
 
-      {(!status || status === "DECLINED") && (
+      {canRespond && (
         <div className="space-y-2">
+          {status === "DROPPED_OUT" && (
+            <p className="text-sm text-gray-600">
+              You dropped out of this match. You can rejoin while it&apos;s still open.
+            </p>
+          )}
           {!isFull ? (
-            prepaymentRequired ? (
+            prepaymentRequired && !canRejoinWithPriorPayment ? (
               <Button size="lg" onClick={handlePayAndConfirm} loading={loading}>
                 Pay & Confirm Spot
               </Button>
             ) : (
               <Button size="lg" onClick={handleConfirm} loading={loading}>
-                Confirm Spot
+                {status === "DROPPED_OUT" ? "Rejoin match" : "Confirm Spot"}
               </Button>
             )
           ) : (
             <Button size="lg" variant="secondary" onClick={handleConfirm} loading={loading}>
-              Join as Standby
+              {status === "DROPPED_OUT" ? "Rejoin as standby" : "Join as Standby"}
             </Button>
           )}
           <Button size="lg" variant="ghost" onClick={handleDecline} loading={loading}>
@@ -170,11 +184,46 @@ export function RsvpActions({
         </div>
       )}
 
-      {status === "CONFIRMED" && (
-        <Button size="lg" variant="danger" onClick={handleDropOut} loading={loading}>
-          Drop out
-        </Button>
-      )}
+      {status === "CONFIRMED" &&
+        (confirmingDropOut ? (
+          <div className="flex flex-col gap-2 rounded-lg border border-red-200 bg-red-50 p-3">
+            <p className="text-sm text-red-700">
+              Drop out of this match? Your confirmed spot will be freed and the next standby player
+              may be promoted automatically.
+            </p>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="secondary"
+                size="lg"
+                onClick={() => setConfirmingDropOut(false)}
+                disabled={loading}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="danger"
+                size="lg"
+                loading={loading}
+                onClick={handleDropOut}
+              >
+                Yes, drop out
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <Button
+            size="lg"
+            variant="danger"
+            onClick={() => {
+              setError(null);
+              setConfirmingDropOut(true);
+            }}
+          >
+            Drop out
+          </Button>
+        ))}
     </div>
   );
 }

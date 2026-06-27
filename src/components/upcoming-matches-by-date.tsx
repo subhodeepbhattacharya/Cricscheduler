@@ -72,6 +72,8 @@ export function UpcomingMatchesByDate({ matches, confirmedCounts, canManage, use
               <div className="space-y-3 border-t border-gray-100 bg-gray-50/50 p-3">
                 {dayMatches.map((match) => {
                   const canEditMatch = canManage || match.created_by_user_id === userId;
+                  const confirmed = confirmedCounts[match.id] ?? 0;
+                  const isFull = confirmed >= match.max_players;
 
                   return (
                     <Card key={match.id}>
@@ -85,8 +87,8 @@ export function UpcomingMatchesByDate({ matches, confirmedCounts, canManage, use
                             <CardDescription>{match.location_name}</CardDescription>
                           </div>
                           <div className="text-right">
-                            <Badge variant="confirmed">
-                              {confirmedCounts[match.id] ?? 0} / {match.max_players}
+                            <Badge variant={isFull ? "standby" : "confirmed"}>
+                              {confirmed} / {match.max_players}
                             </Badge>
                             {Number(match.fee_per_player) > 0 && (
                               <p className="mt-1 text-xs text-gray-500">

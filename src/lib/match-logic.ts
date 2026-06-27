@@ -64,19 +64,11 @@ export async function getConfirmedCount(matchId: string): Promise<number> {
 
 export async function promoteEarliestStandby(matchId: string) {
   const supabase = await createClient();
-  const { data: standby } = await supabase
-    .from("match_participations")
-    .select("id")
-    .eq("match_id", matchId)
-    .eq("status", "STANDBY")
-    .order("joined_at", { ascending: true })
-    .limit(1)
-    .single();
+  const { error } = await supabase.rpc("promote_earliest_standby_for_match", {
+    p_match_id: matchId,
+  });
 
-  if (standby) {
-    await supabase
-      .from("match_participations")
-      .update({ status: "CONFIRMED", dropped_out_at: null })
-      .eq("id", standby.id);
+  if (error) {
+    console.error("Failed to promote standby:", error.message);
   }
 }

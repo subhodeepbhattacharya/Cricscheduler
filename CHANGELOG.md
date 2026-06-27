@@ -3,6 +3,19 @@
 All notable changes to this project are recorded here, newest first.
 Timestamps are in IST (UTC+5:30).
 
+## 2026-06-27 — Fix standby auto-promotion on drop out
+- Player-initiated drop out now promotes the earliest standby player to confirmed via a database RPC (`018_promote_standby_rpc.sql`). Previously RLS only allowed hosts to update another member's participation, so self-service drop out never promoted standby.
+
+## 2026-06-27 — Dropped-out players can rejoin open matches
+- Players who dropped out see **Rejoin match** (or **Rejoin as standby** if full) while the match start time has not passed; same capacity rules apply as a first-time RSVP.
+- Prepayment matches: if the host already verified a prior payment, rejoin uses that payment instead of paying again.
+
+## 2026-06-27 — Confirm before dropping out of a match
+- **Drop out** on the match page now shows an inline confirmation step (Cancel / Yes, drop out) so players can't leave by accident.
+
+## 2026-06-27 — Show signed-in user name in header
+- Header shows `Welcome, {name}` under the nav when signed in (name from profile or sign-up).
+
 ## 2026-06-27 — Group members list; remove (hosts)
 - Hosts/co-hosts see a collapsible **Members** section on the group page (collapsed by default).
 - **Remove** (with confirmation warning) sets status `LEFT`; can re-request via invite. Ban removed.

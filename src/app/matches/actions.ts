@@ -66,7 +66,7 @@ export async function confirmSpot(matchId: string, groupId: string) {
   const status: ParticipationStatus =
     confirmedCount < match.max_players ? "CONFIRMED" : "STANDBY";
 
-  await upsertParticipation(matchId, user.id, status);
+  await upsertParticipation(matchId, user.id, status, { dropped_out_at: null });
   revalidatePath(`/matches/${matchId}`);
   return { success: true, status };
 }
@@ -102,7 +102,7 @@ export async function initiatePayment(matchId: string, groupId: string) {
   if (paymentError) return { error: paymentError.message };
 
   // Hold spot as standby until host verifies payment
-  await upsertParticipation(matchId, user.id, "STANDBY");
+  await upsertParticipation(matchId, user.id, "STANDBY", { dropped_out_at: null });
 
   revalidatePath(`/matches/${matchId}`);
   return { upiIntentUrl, transactionRef, status: "STANDBY" as const };
