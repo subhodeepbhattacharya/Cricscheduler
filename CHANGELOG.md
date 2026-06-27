@@ -3,6 +3,11 @@
 All notable changes to this project are recorded here, newest first.
 Timestamps are in IST (UTC+5:30).
 
+## 2026-06-26 — Show phone on join requests
+- Migration `016_pending_requests_phone.sql`: backfills `users.phone` from auth, and `get_pending_join_requests` falls back to `auth.users.phone` when the profile phone is missing.
+- `ensureUserProfile` now syncs phone onto existing profiles; join-request UI formats phone and shows a fallback if still unavailable.
+- After approve/deny, hosts can optionally open a WhatsApp deep link with a pre-filled message to notify the player.
+
 ## 2026-06-26 — Homepage sign-in CTA
 - Replaced "Get started" with **Sign in**; added **Or sign up instead** link to `/auth?mode=signup`.
 - Auth page reads `?mode=signup` to open the sign-up form by default.

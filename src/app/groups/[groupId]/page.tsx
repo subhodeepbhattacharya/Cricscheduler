@@ -36,7 +36,11 @@ export default async function GroupDetailPage({
     const { data } = await supabase.rpc("get_pending_join_requests", {
       p_group_id: groupId,
     });
-    pendingRequests = (data as PendingRequest[] | null) ?? [];
+    const rows = (data as (PendingRequest & { email?: string | null })[] | null) ?? [];
+    pendingRequests = rows.map((row) => ({
+      ...row,
+      phone: row.phone ?? row.email ?? null,
+    }));
   }
 
   const { data: allMatches, error: matchesError } = await supabase
@@ -135,7 +139,7 @@ export default async function GroupDetailPage({
       )}
 
       {canManage && (
-        <PendingRequests groupId={group.id} requests={pendingRequests} />
+        <PendingRequests groupId={group.id} groupName={group.name} requests={pendingRequests} />
       )}
 
       <div className="mt-6 flex items-center justify-between">

@@ -42,3 +42,14 @@ export function formatPhone(phone: string | null | undefined): string {
   if (!phone) return "";
   return phone.startsWith("+") ? phone : `+${phone}`;
 }
+
+/** Opens WhatsApp chat with a pre-filled message (wa.me deep link). */
+export function buildWhatsAppNotifyUrl(
+  phone: string | null | undefined,
+  message: string
+): string | null {
+  if (!phone) return null;
+  const digits = phone.replace(/\D/g, "");
+  if (digits.length < 8) return null;
+  return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
+}

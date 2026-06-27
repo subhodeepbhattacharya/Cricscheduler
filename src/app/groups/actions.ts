@@ -15,21 +15,30 @@ async function ensureUserProfile(user: {
   user_metadata?: { name?: string };
 }) {
   const supabase = await createClient();
-  const { data: profile } = await supabase.from("users").select("id").eq("id", user.id).single();
-
-  if (profile) return;
-
   const phone = user.phone ? (user.phone.startsWith("+") ? user.phone : `+${user.phone}`) : null;
 
-  const { error } = await supabase.from("users").insert({
-    id: user.id,
-    name: user.user_metadata?.name ?? "Player",
-    phone,
-    email: user.email ?? null,
-  });
+  const { data: profile } = await supabase
+    .from("users")
+    .select("id, phone")
+    .eq("id", user.id)
+    .single();
 
-  if (error) {
-    throw new Error(`Failed to create user profile: ${error.message}`);
+  if (!profile) {
+    const { error } = await supabase.from("users").insert({
+      id: user.id,
+      name: user.user_metadata?.name ?? "Player",
+      phone,
+      email: user.email ?? null,
+    });
+
+    if (error) {
+      throw new Error(`Failed to create user profile: ${error.message}`);
+    }
+    return;
+  }
+
+  if (phone && !profile.phone) {
+    await supabase.from("users").update({ phone }).eq("id", user.id);
   }
 }
 
