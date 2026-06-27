@@ -3,6 +3,11 @@
 All notable changes to this project are recorded here, newest first.
 Timestamps are in IST (UTC+5:30).
 
+## 2026-06-27 — Group members list; remove (hosts)
+- Hosts/co-hosts see a collapsible **Members** section on the group page (collapsed by default).
+- **Remove** (with confirmation warning) sets status `LEFT`; can re-request via invite. Ban removed.
+- Migration `017_group_members.sql`: `get_group_members`, `remove_group_member` RPCs.
+
 ## 2026-06-26 — Show phone on join requests
 - Migration `016_pending_requests_phone.sql`: backfills `users.phone` from auth, and `get_pending_join_requests` falls back to `auth.users.phone` when the profile phone is missing.
 - `ensureUserProfile` now syncs phone onto existing profiles; join-request UI formats phone and shows a fallback if still unavailable.

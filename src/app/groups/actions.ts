@@ -278,3 +278,18 @@ export async function denyJoinRequest(membershipId: string, groupId: string) {
   revalidatePath(`/groups/${groupId}`, "page");
   return { success: true };
 }
+
+export async function removeGroupMember(membershipId: string, groupId: string) {
+  await requireAuth();
+  const supabase = await createClient();
+
+  const { error } = await supabase.rpc("remove_group_member", {
+    p_membership_id: membershipId,
+  });
+
+  if (error) return { error: error.message };
+
+  revalidatePath(`/groups/${groupId}`, "page");
+  revalidatePath("/groups");
+  return { success: true };
+}

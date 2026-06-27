@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { DeleteGroupButton } from "@/components/delete-group-button";
 import { InviteShare } from "@/components/invite-share";
 import { PendingRequests, type PendingRequest } from "@/components/pending-requests";
+import { GroupMembers, type GroupMember } from "@/components/group-members";
 import { UpcomingMatchesByDate } from "@/components/upcoming-matches-by-date";
 import type { Match } from "@/lib/types/database";
 
@@ -41,6 +42,12 @@ export default async function GroupDetailPage({
       ...row,
       phone: row.phone ?? row.email ?? null,
     }));
+  }
+
+  let groupMembers: GroupMember[] = [];
+  if (canManage) {
+    const { data } = await supabase.rpc("get_group_members", { p_group_id: groupId });
+    groupMembers = (data as GroupMember[] | null) ?? [];
   }
 
   const { data: allMatches, error: matchesError } = await supabase
@@ -140,6 +147,10 @@ export default async function GroupDetailPage({
 
       {canManage && (
         <PendingRequests groupId={group.id} groupName={group.name} requests={pendingRequests} />
+      )}
+
+      {canManage && (
+        <GroupMembers groupId={group.id} members={groupMembers} currentUserId={user.id} />
       )}
 
       <div className="mt-6 flex items-center justify-between">
