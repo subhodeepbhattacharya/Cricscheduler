@@ -2,6 +2,7 @@ export type MembershipRole = "HOST" | "CO_HOST" | "PLAYER";
 export type MembershipStatus = "ACTIVE" | "PENDING" | "LEFT" | "BANNED";
 export type MatchStatus = "SCHEDULED" | "COMPLETED" | "CANCELLED";
 export type ParticipationStatus = "CONFIRMED" | "STANDBY" | "DECLINED" | "DROPPED_OUT";
+export type MatchTeam = "A" | "B";
 export type PaymentStatus = "PENDING" | "SUCCESS" | "FAILED";
 export type PaymentProvider = "UPI_INTENT";
 
@@ -50,6 +51,8 @@ export interface Match {
   fee_per_player: number;
   prepayment_required: boolean;
   status: MatchStatus;
+  team_a_name: string | null;
+  team_b_name: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -61,6 +64,7 @@ export interface MatchParticipation {
   status: ParticipationStatus;
   joined_at: string;
   dropped_out_at: string | null;
+  team: MatchTeam | null;
 }
 
 export interface Payment {
@@ -150,10 +154,11 @@ type Tables = {
   };
   match_participations: {
     Row: MatchParticipation;
-    Insert: Omit<MatchParticipation, "id" | "joined_at" | "dropped_out_at"> & {
+    Insert: Omit<MatchParticipation, "id" | "joined_at" | "dropped_out_at" | "team"> & {
       id?: string;
       joined_at?: string;
       dropped_out_at?: string | null;
+      team?: MatchTeam | null;
     };
     Update: Partial<Omit<MatchParticipation, "id">>;
     Relationships: [];

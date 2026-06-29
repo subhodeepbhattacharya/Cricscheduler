@@ -22,13 +22,13 @@ import {
 } from "@/lib/utils";
 
 const MATCH_ELAPSED_ERROR = "This match has already started and can no longer be joined.";
-import type { ParticipationStatus } from "@/lib/types/database";
+import type { ParticipationStatus, MatchTeam } from "@/lib/types/database";
 
 async function upsertParticipation(
   matchId: string,
   userId: string,
   status: ParticipationStatus,
-  extra?: { dropped_out_at?: string | null }
+  extra?: { dropped_out_at?: string | null; team?: MatchTeam | null }
 ) {
   const supabase = await createClient();
   const { data: existing } = await supabase
@@ -133,6 +133,7 @@ export async function dropOut(matchId: string) {
 
   await upsertParticipation(matchId, user.id, "DROPPED_OUT", {
     dropped_out_at: new Date().toISOString(),
+    team: null,
   });
   await promoteEarliestStandby(matchId);
 
@@ -243,12 +244,101 @@ export async function markDroppedOut(participationId: string, matchId: string) {
 
   await supabase
     .from("match_participations")
-    .update({ status: "DROPPED_OUT", dropped_out_at: new Date().toISOString() })
+    .update({ status: "DROPPED_OUT", dropped_out_at: new Date().toISOString(), team: null })
     .eq("id", participationId);
 
   if (wasConfirmed) {
     await promoteEarliestStandby(matchId);
   }
+
+  revalidatePath(`/matches/${matchId}/manage`);
+  revalidatePath(`/matches/${matchId}`);
+  return { success: true };
+}
+
+export async function assignParticipantTeam(
+  participationId: string,
+  matchId: string,
+  team: MatchTeam | null
+) {
+  const user = await requireAuth();
+  const supabase = await createClient();
+
+  const { data: match } = await supabase.from("matches").select("*").eq("id", matchId).single();
+  if (!match) return { error: "Match not found" };
+  if (match.status !== "SCHEDULED") {
+    return { error: "Teams can only be assigned for scheduled matches" };
+  }
+
+  const allowed = await isHostOrCoHost(match.group_id, user.id);
+  if (!allowed) return { error: "Not authorized" };
+
+  const { data: participation } = await supabase
+    .from("match_participations")
+    .select("status")
+    .eq("id", participationId)
+    .eq("match_id", matchId)
+    .single();
+
+  if (!participation) return { error: "Participant not found" };
+  if (participation.status !== "CONFIRMED") {
+    return { error: "Only confirmed players can be assigned to a team" };
+  }
+
+  const { error } = await supabase
+    .from("match_participations")
+    .update({ team })
+    .eq("id", participationId);
+
+  if (error) return { error: error.message };
+
+  revalidatePath(`/matches/${matchId}/manage`);
+  revalidatePath(`/matches/${matchId}`);
+  return { success: true };
+}
+
+const TEAM_NAME_MAX_LENGTH = 40;
+
+export async function updateMatchTeamNames(
+  matchId: string,
+  teamAName: string,
+  teamBName: string
+) {
+  const user = await requireAuth();
+  const supabase = await createClient();
+
+  const { data: match } = await supabase.from("matches").select("*").eq("id", matchId).single();
+  if (!match) return { error: "Match not found" };
+  if (match.status !== "SCHEDULED") {
+    return { error: "Team names can only be changed for scheduled matches" };
+  }
+
+  const allowed = await isHostOrCoHost(match.group_id, user.id);
+  if (!allowed) return { error: "Not authorized" };
+
+  function normalize(name: string): { ok: true; value: string | null } | { ok: false; error: string } {
+    const trimmed = name.trim();
+    if (!trimmed) return { ok: true, value: null };
+    if (trimmed.length > TEAM_NAME_MAX_LENGTH) {
+      return { ok: false, error: `Team name must be ${TEAM_NAME_MAX_LENGTH} characters or fewer` };
+    }
+    return { ok: true, value: trimmed };
+  }
+
+  const normalizedA = normalize(teamAName);
+  if (!normalizedA.ok) return { error: normalizedA.error };
+  const normalizedB = normalize(teamBName);
+  if (!normalizedB.ok) return { error: normalizedB.error };
+
+  const { error } = await supabase
+    .from("matches")
+    .update({
+      team_a_name: normalizedA.value,
+      team_b_name: normalizedB.value,
+    })
+    .eq("id", matchId);
+
+  if (error) return { error: error.message };
 
   revalidatePath(`/matches/${matchId}/manage`);
   revalidatePath(`/matches/${matchId}`);

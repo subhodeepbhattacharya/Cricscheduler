@@ -84,3 +84,11 @@ export function formatMatchTime(startTime: string, endTime?: string | null): str
   if (startKey === endKey) return start;
   return `${start} – ${formatTime(endTime)}`;
 }
+
+export const DEFAULT_TEAM_A_NAME = "Team A";
+export const DEFAULT_TEAM_B_NAME = "Team B";
+
+export function resolveTeamDisplayName(stored: string | null | undefined, fallback: string): string {
+  const trimmed = stored?.trim();
+  return trimmed || fallback;
+}

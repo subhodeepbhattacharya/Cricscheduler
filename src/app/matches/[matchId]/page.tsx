@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getConfirmedCount, canManageMatch } from "@/lib/match-logic";
 import { formatDate, formatMatchTime, formatCurrency, isMatchElapsed } from "@/lib/utils";
 import { RsvpActions } from "@/components/rsvp-actions";
+import { MatchTeamsDisplay } from "@/components/match-teams-display";
 import { DeleteMatchButton } from "@/components/delete-match-button";
 import { buttonVariants } from "@/components/ui/button";
 import { Badge, statusLabel, formatStatus } from "@/components/ui/badge";
@@ -63,6 +64,54 @@ export default async function MatchDetailPage({
   const typedMatch = match;
   const typedParticipation = participation as MatchParticipation | null;
   const typedPayment = latestPayment as Payment | null;
+
+  let teamRoster: {
+    teamA: { userId: string; name: string }[];
+    teamB: { userId: string; name: string }[];
+    unassigned: { userId: string; name: string }[];
+  } | null = null;
+
+  if (typedMatch.status === "SCHEDULED") {
+    const { data: confirmedParticipations } = await supabase
+      .from("match_participations")
+      .select("user_id, team")
+      .eq("match_id", matchId)
+      .eq("status", "CONFIRMED")
+      .order("joined_at", { ascending: true });
+
+    if (confirmedParticipations && confirmedParticipations.length > 0) {
+      const rosterUserIds = confirmedParticipations.map((p) => p.user_id);
+      const { data: rosterUsers } = await supabase
+        .from("users")
+        .select("id, name")
+        .in("id", rosterUserIds);
+
+      const nameByUserId = (rosterUsers ?? []).reduce(
+        (acc, u) => {
+          acc[u.id] = u.name;
+          return acc;
+        },
+        {} as Record<string, string>
+      );
+
+      const toPlayer = (userId: string) => ({
+        userId,
+        name: nameByUserId[userId] ?? "Player",
+      });
+
+      teamRoster = {
+        teamA: confirmedParticipations
+          .filter((p) => p.team === "A")
+          .map((p) => toPlayer(p.user_id)),
+        teamB: confirmedParticipations
+          .filter((p) => p.team === "B")
+          .map((p) => toPlayer(p.user_id)),
+        unassigned: confirmedParticipations
+          .filter((p) => !p.team)
+          .map((p) => toPlayer(p.user_id)),
+      };
+    }
+  }
 
   return (
     <div>
@@ -141,6 +190,17 @@ export default async function MatchDetailPage({
         >
           Manage participants →
         </Link>
+      )}
+
+      {teamRoster && (
+        <MatchTeamsDisplay
+          teamAName={typedMatch.team_a_name ?? null}
+          teamBName={typedMatch.team_b_name ?? null}
+          teamA={teamRoster.teamA}
+          teamB={teamRoster.teamB}
+          unassigned={teamRoster.unassigned}
+          currentUserId={user.id}
+        />
       )}
 
       <div className="mt-6">

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { requireAuth } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { isHostOrCoHost } from "@/lib/match-logic";
+import { isActiveMember } from "@/lib/match-logic";
 import { MatchForm } from "@/components/match-form";
 
 export default async function NewMatchPage({
@@ -17,7 +17,7 @@ export default async function NewMatchPage({
   const { data: group } = await supabase.from("cricket_groups").select("name").eq("id", groupId).single();
   if (!group) notFound();
 
-  const canCreate = await isHostOrCoHost(groupId, user.id);
+  const canCreate = await isActiveMember(groupId, user.id);
   if (!canCreate) redirect(`/groups/${groupId}`);
 
   return (

@@ -2,16 +2,15 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAuth } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { isHostOrCoHost, getUserGroupRole } from "@/lib/match-logic";
-import { formatDate, formatMatchTime, isMatchElapsed, getMatchStartMs } from "@/lib/utils";
+import { isHostOrCoHost, getUserGroupRole, isActiveMember } from "@/lib/match-logic";
+import { isMatchElapsed, getMatchStartMs } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
-import { Card, CardDescription, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { DeleteGroupButton } from "@/components/delete-group-button";
 import { InviteShare } from "@/components/invite-share";
 import { PendingRequests, type PendingRequest } from "@/components/pending-requests";
 import { GroupMembers, type GroupMember } from "@/components/group-members";
 import { UpcomingMatchesByDate } from "@/components/upcoming-matches-by-date";
+import { PastMatchesSection } from "@/components/past-matches-section";
 import type { Match } from "@/lib/types/database";
 
 export const dynamic = "force-dynamic";
@@ -29,6 +28,7 @@ export default async function GroupDetailPage({
   if (!group) notFound();
 
   const canManage = await isHostOrCoHost(groupId, user.id);
+  const canCreateMatch = await isActiveMember(groupId, user.id);
   const role = await getUserGroupRole(groupId, user.id);
   const canDeleteGroup = role === "HOST" || group.created_by_user_id === user.id;
 
@@ -155,7 +155,7 @@ export default async function GroupDetailPage({
 
       <div className="mt-6 flex items-center justify-between">
         <h2 className="text-lg font-semibold text-gray-900">Upcoming matches</h2>
-        {canManage && (
+        {canCreateMatch && (
           <Link
             href={`/groups/${groupId}/matches/new`}
             className={buttonVariants({ size: "sm" })}
@@ -180,36 +180,7 @@ export default async function GroupDetailPage({
         />
       )}
 
-      {pastMatches.length > 0 && (
-        <>
-          <h2 className="mt-8 text-lg font-semibold text-gray-900">Past matches</h2>
-          <div className="mt-4 space-y-3">
-            {pastMatches.map((match) => (
-              <Card key={match.id} className="opacity-75">
-                <Link href={`/matches/${match.id}`}>
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <CardTitle>{match.title}</CardTitle>
-                      <CardDescription>
-                        {formatDate(match.date)} · {formatMatchTime(match.start_time, match.end_time)}
-                      </CardDescription>
-                      <CardDescription>{match.location_name}</CardDescription>
-                    </div>
-                    <div className="text-right">
-                      <Badge variant={match.status === "CANCELLED" ? "cancelled" : "completed"}>
-                        {match.status === "CANCELLED" ? "Cancelled" : "Ended"}
-                      </Badge>
-                      <p className="mt-1 text-xs text-gray-500">
-                        {confirmedCounts[match.id] ?? 0} / {match.max_players} played
-                      </p>
-                    </div>
-                  </div>
-                </Link>
-              </Card>
-            ))}
-          </div>
-        </>
-      )}
+      <PastMatchesSection matches={pastMatches} confirmedCounts={confirmedCounts} />
     </div>
   );
 }

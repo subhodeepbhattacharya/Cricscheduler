@@ -6,7 +6,7 @@ import { requireAuth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { getLocalTodayDateString } from "@/lib/utils";
-import { isHostOrCoHost } from "@/lib/match-logic";
+import { isHostOrCoHost, isActiveMember } from "@/lib/match-logic";
 
 async function ensureUserProfile(user: {
   id: string;
@@ -113,6 +113,10 @@ export async function updateGroup(groupId: string, formData: FormData) {
 
 export async function createMatch(groupId: string, formData: FormData) {
   const user = await requireAuth();
+  if (!(await isActiveMember(groupId, user.id))) {
+    return { error: "You must be an approved member of this group to create a match." };
+  }
+
   const supabase = await createClient();
 
   const title = formData.get("title") as string;

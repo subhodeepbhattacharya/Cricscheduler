@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   updatePaymentStatus,
   promoteStandby,
@@ -22,7 +23,9 @@ export function ManageParticipants({
   prepaymentRequired,
   participants,
 }: ManageParticipantsProps) {
+  const router = useRouter();
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [confirmDropId, setConfirmDropId] = useState<string | null>(null);
 
   const groups = {
     CONFIRMED: participants.filter((p) => p.status === "CONFIRMED"),
@@ -45,7 +48,11 @@ export function ManageParticipants({
 
   async function handleDrop(participationId: string) {
     setLoadingId(participationId);
-    await markDroppedOut(participationId, matchId);
+    const result = await markDroppedOut(participationId, matchId);
+    if (!result?.error) {
+      setConfirmDropId(null);
+      router.refresh();
+    }
     setLoadingId(null);
   }
 
@@ -116,28 +123,58 @@ export function ManageParticipants({
                     </div>
                   )}
 
-                  <div className="mt-2 flex gap-2">
-                    {p.status === "STANDBY" && (
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => handlePromote(p.id)}
-                        loading={loadingId === p.id}
-                      >
-                        Promote
-                      </Button>
-                    )}
-                    {(p.status === "CONFIRMED" || p.status === "STANDBY") && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleDrop(p.id)}
-                        loading={loadingId === p.id}
-                      >
-                        Mark dropped out
-                      </Button>
-                    )}
-                  </div>
+                    {(p.status === "CONFIRMED" || p.status === "STANDBY") &&
+                      (confirmDropId === p.id ? (
+                        <div className="mt-2 flex flex-col gap-2 rounded-lg border border-red-200 bg-red-50 p-3">
+                          <p className="text-xs text-red-700">
+                            Mark <span className="font-semibold">{p.user.name}</span> as dropped
+                            out?
+                            {p.status === "CONFIRMED" &&
+                              " Their spot will be freed and the next standby player may be promoted."}
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="secondary"
+                              onClick={() => setConfirmDropId(null)}
+                              disabled={loadingId === p.id}
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="danger"
+                              loading={loadingId === p.id}
+                              onClick={() => handleDrop(p.id)}
+                            >
+                              Yes, mark dropped out
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="mt-2 flex gap-2">
+                          {p.status === "STANDBY" && (
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              onClick={() => handlePromote(p.id)}
+                              loading={loadingId === p.id}
+                            >
+                              Promote
+                            </Button>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setConfirmDropId(p.id)}
+                            className="text-red-700 hover:text-red-800"
+                          >
+                            Mark dropped out
+                          </Button>
+                        </div>
+                      ))}
                 </div>
               ))}
             </div>

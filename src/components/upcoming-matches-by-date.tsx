@@ -58,7 +58,7 @@ export function UpcomingMatchesByDate({ matches, confirmedCounts, canManage, use
             >
               <div>
                 <p className="font-semibold text-gray-900">{formatDate(date)}</p>
-                <p className="text-xs text-gray-500">{matchLabel}</p>
+                <p className="text-sm font-medium text-green-700">{matchLabel}</p>
               </div>
               <span
                 className={`text-gray-400 transition-transform ${isExpanded ? "rotate-180" : ""}`}

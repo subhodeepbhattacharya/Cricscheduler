@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { isHostOrCoHost, getConfirmedCount } from "@/lib/match-logic";
 import { formatDate, formatTime } from "@/lib/utils";
 import { ManageParticipants } from "@/components/manage-participants";
+import { TeamAssignment } from "@/components/team-assignment";
 import type { ParticipationWithUser, User, Payment } from "@/lib/types/database";
 
 export default async function ManageMatchPage({
@@ -59,6 +60,7 @@ export default async function ManageMatchPage({
 
   const participants: ParticipationWithUser[] = (participations ?? []).map((p) => ({
     ...p,
+    team: p.team ?? null,
     user: usersMap[p.user_id] ?? { id: p.user_id, name: "Unknown", phone: null },
     payment: latestPaymentByUser[p.user_id] ?? null,
   }));
@@ -77,7 +79,14 @@ export default async function ManageMatchPage({
         {confirmedCount} / {match.max_players} confirmed
       </p>
 
-      <div className="mt-6">
+      <div className="mt-6 space-y-6">
+        <TeamAssignment
+          matchId={matchId}
+          matchStatus={match.status}
+          teamAName={match.team_a_name ?? null}
+          teamBName={match.team_b_name ?? null}
+          confirmed={participants.filter((p) => p.status === "CONFIRMED")}
+        />
         <ManageParticipants
           matchId={matchId}
           prepaymentRequired={match.prepayment_required}
