@@ -3,6 +3,17 @@
 All notable changes to this project are recorded here, newest first.
 Timestamps are in IST (UTC+5:30).
 
+## 2026-06-29 — Privacy, Terms, About refresh, prominent match times
+- Added `/privacy` and `/terms` tailored to phone OTP, Supabase, optional UPI, and no data selling; footer links **About · Privacy · Terms**.
+- Updated `/about` for current features (member match creation, standby/teams, join-request phone, etc.) and aligned sign-in CTA with the homepage.
+- Upcoming match cards show **start time** prominently in green above the match title.
+
+## 2026-06-29 — Team assignment, member match creation, group UX
+- Hosts/co-hosts can optionally assign confirmed players to **Team A / Team B** with custom names on manage match (`019_match_teams.sql`, `020_match_team_names.sql`); read-only lineup on the match page for all members.
+- Any **active group member** can create matches (`021_member_create_match.sql`); host-only tools unchanged.
+- **Past matches** section is collapsible and collapsed by default; upcoming date headers show match count in green.
+- **Mark dropped out** on manage participants requires confirmation.
+
 ## 2026-06-27 — Fix standby auto-promotion on drop out
 - Player-initiated drop out now promotes the earliest standby player to confirmed via a database RPC (`018_promote_standby_rpc.sql`). Previously RLS only allowed hosts to update another member's participation, so self-service drop out never promoted standby.
 
