@@ -29,8 +29,10 @@ export default async function AboutPage() {
         <h2 className="text-lg font-semibold text-gray-900">What we do</h2>
         <p className="text-sm leading-relaxed text-gray-600">
           CricScheduler replaces the endless WhatsApp threads about who&apos;s playing, when, and
-          where. Hosts schedule matches with date, time, and location; players confirm or decline in
-          one tap; optional UPI prepayment keeps spots fair.
+          where. Members schedule matches with date, time, and location; players confirm, join
+          standby when full, or decline in one tap; optional UPI prepayment keeps spots fair. Hosts
+          can optionally split confirmed players into two named teams so everyone sees the lineup
+          before they arrive.
         </p>
       </section>
 
@@ -47,15 +49,26 @@ export default async function AboutPage() {
           <li className="rounded-xl border border-gray-200 bg-white p-4">
             <span className="font-medium text-gray-900">2. Schedule matches</span>
             <p className="mt-1">
-              Set date, time, venue, player limit, and optional match fee. Upcoming matches are
-              grouped by day so everyone sees what&apos;s on.
+              Any approved group member can create a match — set date, time, venue, player limit, and
+              optional fee. Upcoming matches are grouped by day (with start times shown clearly); past
+              matches stay in a collapsed section for reference.
             </p>
           </li>
           <li className="rounded-xl border border-gray-200 bg-white p-4">
             <span className="font-medium text-gray-900">3. RSVP &amp; pay</span>
             <p className="mt-1">
-              Players confirm, join standby, or decline. If prepayment is required, they pay via UPI
-              and the host verifies before confirming the spot.
+              Players confirm, join standby when the match is full, or decline. If someone drops out,
+              the next standby player is promoted automatically. Dropped-out players can rejoin while
+              the match is still open. If prepayment is required, they pay via UPI and the host
+              verifies before confirming the spot.
+            </p>
+          </li>
+          <li className="rounded-xl border border-gray-200 bg-white p-4">
+            <span className="font-medium text-gray-900">4. Teams (optional)</span>
+            <p className="mt-1">
+              Hosts and co-hosts can assign confirmed players to two sides and rename the teams
+              (e.g. Kings vs Knights). The lineup appears on the match page for everyone in the
+              group.
             </p>
           </li>
         </ol>
@@ -72,9 +85,12 @@ export default async function AboutPage() {
       <section className="mt-8 space-y-3">
         <h2 className="text-lg font-semibold text-gray-900">Groups &amp; WhatsApp</h2>
         <p className="text-sm leading-relaxed text-gray-600">
-          Most groups are tied to a WhatsApp chat, but the link is optional. Join requests are
-          approved by the host — we don&apos;t verify WhatsApp membership automatically, so hosts
-          should only approve people they know from the group.
+          Most groups are tied to a WhatsApp chat, but the link is optional. Join requests show the
+          player&apos;s phone number and are approved by the host — we don&apos;t verify WhatsApp
+          membership automatically, so hosts should only approve people they know from the group.
+          After approve or deny, hosts can optionally notify the player on WhatsApp. Hosts and
+          co-hosts can edit group details, review members, and remove someone from the group if
+          needed.
         </p>
       </section>
 
@@ -86,9 +102,23 @@ export default async function AboutPage() {
       </section>
 
       <div className="mt-8 text-center">
-        <Link href={user ? "/groups" : "/auth"} className={buttonVariants({ size: "lg" })}>
-          {user ? "Go to my groups" : "Get started"}
-        </Link>
+        {user ? (
+          <Link href="/groups" className={buttonVariants({ size: "lg" })}>
+            Go to my groups
+          </Link>
+        ) : (
+          <>
+            <Link href="/auth" className={buttonVariants({ size: "lg" })}>
+              Sign in
+            </Link>
+            <p className="mt-3 text-sm text-gray-500">
+              Or{" "}
+              <Link href="/auth?mode=signup" className="font-medium text-green-700 hover:underline">
+                sign up instead
+              </Link>
+            </p>
+          </>
+        )}
       </div>
     </div>
   );

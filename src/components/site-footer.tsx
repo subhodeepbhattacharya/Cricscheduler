@@ -10,6 +10,12 @@ export function SiteFooter() {
           <Link href="/about" className="hover:text-green-700">
             About
           </Link>
+          <Link href="/privacy" className="hover:text-green-700">
+            Privacy
+          </Link>
+          <Link href="/terms" className="hover:text-green-700">
+            Terms
+          </Link>
         </nav>
         <p>© {year} CricScheduler. All rights reserved.</p>
       </div>

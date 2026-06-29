@@ -78,15 +78,15 @@ export function UpcomingMatchesByDate({ matches, confirmedCounts, canManage, use
                   return (
                     <Card key={match.id}>
                       <Link href={`/matches/${match.id}`}>
-                        <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <CardTitle>{match.title}</CardTitle>
-                            <CardDescription>
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="text-lg font-semibold text-green-700">
                               {formatMatchTime(match.start_time, match.end_time)}
-                            </CardDescription>
+                            </p>
+                            <CardTitle className="mt-1">{match.title}</CardTitle>
                             <CardDescription>{match.location_name}</CardDescription>
                           </div>
-                          <div className="text-right">
+                          <div className="shrink-0 text-right">
                             <Badge variant={isFull ? "standby" : "confirmed"}>
                               {confirmed} / {match.max_players}
                             </Badge>
