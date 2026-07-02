@@ -15,7 +15,7 @@ export default function PrivacyPage() {
 
       <div className="mt-4">
         <h1 className="text-2xl font-bold text-gray-900">Privacy Policy</h1>
-        <p className="mt-2 text-sm text-gray-500">Last updated: June 2026</p>
+        <p className="mt-2 text-sm text-gray-500">Last updated: July 2026</p>
         <p className="mt-3 text-sm leading-relaxed text-gray-600">
           CricScheduler (&quot;we&quot;, &quot;us&quot;) is operated by Subhodeep B. This policy
           explains what personal data we collect when you use the CricScheduler web app, why we
@@ -56,7 +56,7 @@ export default function PrivacyPage() {
       <section className="mt-8 space-y-3">
         <h2 className="text-lg font-semibold text-gray-900">How we use your information</h2>
         <ul className="list-disc space-y-2 pl-5 text-sm leading-relaxed text-gray-600">
-          <li>Authenticate you via one-time codes sent by SMS or WhatsApp.</li>
+          <li>Authenticate you via one-time codes sent to your phone on WhatsApp.</li>
           <li>Run groups, matches, RSVPs, standby lists, and optional team lineups.</li>
           <li>Let hosts verify UPI prepayments and manage participants.</li>
           <li>Protect the service (e.g. reCAPTCHA on OTP requests to reduce abuse).</li>
@@ -85,7 +85,7 @@ export default function PrivacyPage() {
             and session storage.
           </li>
           <li>
-            <span className="font-medium text-gray-800">Twilio</span> — delivery of SMS or WhatsApp
+            <span className="font-medium text-gray-800">MSG91</span> — delivery of WhatsApp
             one-time codes for sign-in.
           </li>
           <li>

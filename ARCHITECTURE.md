@@ -11,7 +11,7 @@ ORM, or client state-management library.
 |-------|------------|
 | Frontend | Next.js 15 (App Router), React 19, TypeScript 5.8, Tailwind CSS 4 |
 | Backend | Next.js Server Components + Server Actions |
-| Auth | Supabase Auth (phone OTP via WhatsApp/SMS, Twilio Verify) via `@supabase/ssr` (cookie sessions) |
+| Auth | Supabase Auth (phone OTP) via `@supabase/ssr` (cookie sessions); OTP delivered over WhatsApp via MSG91 through a Supabase Send SMS Hook (Edge Function) |
 | Database | Supabase PostgreSQL with Row Level Security + SECURITY DEFINER RPCs |
 | Integrations | Google Maps Places (location picker), UPI intent deep links |
 | Tooling | ESLint 9, nvm, npm |
@@ -34,7 +34,8 @@ flowchart TB
     end
 
     subgraph Supabase["Supabase (managed)"]
-        Auth["Supabase Auth<br/>(phone OTP: WhatsApp/SMS)"]
+        Auth["Supabase Auth<br/>(phone OTP)"]
+        Hook["Send SMS Hook<br/>(Edge Function → MSG91 WhatsApp)"]
         subgraph PG["PostgreSQL"]
             RLS["Row Level Security<br/>policies"]
             RPC["SECURITY DEFINER RPCs<br/>(get/update/delete match,<br/>join group, approve, etc.)"]
@@ -57,6 +58,8 @@ flowchart TB
     SBClient -->|SQL select/insert| RLS
     RPC --> Tables
     RLS --> Tables
+    Auth -->|OTP payload| Hook
+    Hook -->|WhatsApp template| MSG91["MSG91 WhatsApp API"]
 ```
 
 ## Request lifecycle
@@ -187,7 +190,8 @@ src/
     match-logic.ts             role + RSVP helpers
     phone.ts                   E.164 phone normalize/validate
     utils.ts                   formatting, UPI URL builder
-supabase/migrations/           001–015 SQL migrations (schema, RLS, RPCs)
+supabase/migrations/           001–021 SQL migrations (schema, RLS, RPCs)
+supabase/functions/sms-hook/   Send SMS Hook Edge Function (WhatsApp via MSG91)
 ```
 
 ## Local development
@@ -202,40 +206,49 @@ npm run dev:clean    # clears .next cache first (use if stale-chunk errors)
 Do not run `npm run build` while `npm run dev` is running — it can corrupt the
 shared `.next` cache and cause 404/500s until cleared.
 
-## Testing phone OTP locally
+## OTP delivery (WhatsApp via MSG91)
 
-The OTP is sent by **Supabase's servers calling Twilio** (not the browser), so
-delivery behaves the same on `localhost` as in production. For day-to-day local
-testing, skip Twilio entirely using Supabase **test phone numbers** (fixed
-codes that never hit the provider):
+Supabase generates and validates the OTP; delivery is customized via the
+**Send SMS Hook**. When a phone OTP is requested, Supabase POSTs a signed payload
+(`user.phone`, `sms.otp`) to the `sms-hook` Edge Function
+(`supabase/functions/sms-hook/index.ts`), which sends the code over **WhatsApp**
+using MSG91's WhatsApp API and an approved **authentication template**. Supabase
+still owns OTP validation (`verifyOtp`) and session creation — only the delivery
+channel is swapped, so no custom auth is needed. WhatsApp is not subject to
+Indian DLT/SMS registration.
+
+The client always requests Supabase's `sms` channel in production (that's what
+fires the Send SMS Hook); the `whatsapp` channel would bypass the hook. The
+sign-in form's copy says WhatsApp because that's the actual delivery channel.
+
+### Testing phone OTP locally
+
+For day-to-day local testing, skip the provider entirely using Supabase
+**test phone numbers** (fixed codes that never hit MSG91):
 
 1. Supabase Dashboard → **Authentication → Sign In / Providers → Phone** (ensure
    the Phone provider is enabled).
 2. In the **Test OTP** section, add a mapping, e.g. phone `+919876543210` →
    code `123456`. (Self-hosted/CLI equivalent: the `[auth.sms.test_otp]` block
    in `supabase/config.toml`.)
-3. In the sign-in form, enter that number, send a code (channel is irrelevant —
-   it won't call Twilio), then verify with the static code.
+3. In the sign-in form, enter that number, send a code (the hook is not called
+   for test numbers), then verify with the static code.
 
-This exercises the full sign-up → profile-creation → sign-in flow without any
-Twilio setup.
+In development the form still exposes both **SMS** and **WhatsApp** buttons
+(`channelMode="dual"`) for exercising Supabase's native providers; production
+renders a single WhatsApp button.
 
-### Real delivery (when validating the provider)
+### Real delivery (validating MSG91)
 
-Pick one channel and make the Twilio **sender** match it, or you'll hit Twilio
-error 21910 ("Invalid From and To pair … same channel"):
+Deploy the Edge Function and enable the hook (see deployment below). You need:
 
-- **SMS (easiest on a trial):** set the Supabase Phone provider's Twilio sender
-  to your trial **SMS** number, and **verify your test number** in the Twilio
-  console (trial only sends to verified numbers). Use the form's **Send code via
-  SMS** button.
-- **WhatsApp:** the sender must be a WhatsApp sender (e.g. the Twilio sandbox
-  `whatsapp:+14155238886`), and the recipient must first **join the sandbox**
-  (send `join <keyword>` to that number on WhatsApp). Only then will the
-  WhatsApp channel deliver.
+- A **WhatsApp Business number** registered on MSG91 (the "integrated number").
+- An approved WhatsApp **authentication template** (one OTP body variable plus a
+  copy-code button).
+- `MSG91_AUTHKEY` and the template name/language set as Edge Function secrets.
 
-The sign-in form offers both **SMS** (default) and **WhatsApp** buttons; SMS is
-the default because it's the least error-prone on a Twilio trial.
+Check **Edge Functions → sms-hook → Logs** and the MSG91 dashboard if a code
+doesn't arrive.
 
 ## Deployment
 
@@ -280,10 +293,16 @@ See `.env.example` for the authoritative list.
    production domain and add it (plus `*.vercel.app` preview URLs) to **Redirect
    URLs**, so OTP/auth redirects work in production.
 2. **Run migrations** against the production database: apply
-   `supabase/migrations/001`–`015` (Supabase SQL Editor or `supabase db push`).
+   `supabase/migrations/001`–`021` (Supabase SQL Editor or `supabase db push`).
+   After DDL changes, run `NOTIFY pgrst, 'reload schema';`.
 3. **reCAPTCHA**: add the production domain to the allowed domains in the
    reCAPTCHA admin console.
 4. **Google Maps**: add the production domain to the API key's HTTP referrer
    restrictions.
-5. **Twilio Verify** (phone OTP): confirm the WhatsApp/SMS sender and Verify
-   service are live (not in trial/sandbox) for real users.
+5. **WhatsApp OTP (MSG91)**: deploy the hook
+   (`npx supabase functions deploy sms-hook --no-verify-jwt`), set its secrets
+   (`SEND_SMS_HOOK_SECRET`, `MSG91_AUTHKEY`, `MSG91_WA_INTEGRATED_NUMBER`,
+   `MSG91_WA_TEMPLATE_NAME`, optional `MSG91_WA_TEMPLATE_LANG`), and enable
+   **Auth → Hooks → Send SMS** (HTTPS →
+   `https://<project-ref>.supabase.co/functions/v1/sms-hook`). Confirm the MSG91
+   WhatsApp number and authentication template are approved for live use.

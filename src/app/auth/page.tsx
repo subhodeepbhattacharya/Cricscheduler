@@ -23,7 +23,11 @@ export default async function AuthPage({
         Use your phone number to manage your cricket groups.
       </p>
       <div className="mt-6">
-        <AuthForm next={safeNext} initialMode={initialMode} />
+        <AuthForm
+          next={safeNext}
+          initialMode={initialMode}
+          channelMode={process.env.NODE_ENV === "production" ? "whatsapp" : "dual"}
+        />
       </div>
     </div>
   );

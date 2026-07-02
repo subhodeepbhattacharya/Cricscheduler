@@ -8,15 +8,33 @@ import { executeRecaptcha } from "@/lib/recaptcha-client";
 
 type Channel = "whatsapp" | "sms";
 
+/**
+ * "dual"     — dev: show both SMS and WhatsApp buttons.
+ * "whatsapp" — prod: single WhatsApp button (OTP delivered via MSG91 hook).
+ * "sms"      — single SMS button.
+ */
+type ChannelMode = "dual" | "whatsapp" | "sms";
+
 type Mode = "signin" | "signup";
 
-export function AuthForm({ next, initialMode = "signin" }: { next?: string; initialMode?: Mode }) {
+export function AuthForm({
+  next,
+  initialMode = "signin",
+  channelMode = "dual",
+}: {
+  next?: string;
+  initialMode?: Mode;
+  channelMode?: ChannelMode;
+}) {
   const [mode, setMode] = useState<Mode>(initialMode);
   const [step, setStep] = useState<"request" | "verify">("request");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [normalizedPhone, setNormalizedPhone] = useState("");
-  const [channel, setChannel] = useState<Channel>("whatsapp");
+  const singleChannel: Channel = channelMode === "sms" ? "sms" : "whatsapp";
+  const [channel, setChannel] = useState<Channel>(
+    channelMode === "dual" ? "sms" : singleChannel
+  );
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -52,7 +70,9 @@ export function AuthForm({ next, initialMode = "signin" }: { next?: string; init
     setChannel(viaChannel);
     setStep("verify");
     setMessage(
-      `We sent a code via ${viaChannel === "sms" ? "SMS" : "WhatsApp"} to ${result.phone}.`
+      viaChannel === "sms"
+        ? `We sent a code via SMS to ${result.phone}.`
+        : `We sent a code on WhatsApp to ${result.phone}.`
     );
     setLoading(false);
   }
@@ -173,7 +193,7 @@ export function AuthForm({ next, initialMode = "signin" }: { next?: string; init
         className="space-y-4"
         onSubmit={(e) => {
           e.preventDefault();
-          sendCode("sms");
+          sendCode(channelMode === "dual" ? "sms" : singleChannel);
         }}
       >
         {mode === "signup" && (
@@ -204,17 +224,23 @@ export function AuthForm({ next, initialMode = "signin" }: { next?: string; init
         )}
 
         <Button type="submit" size="lg" loading={loading}>
-          Send code via SMS
+          {channelMode === "dual"
+            ? "Send code via SMS"
+            : singleChannel === "whatsapp"
+              ? "Send code on WhatsApp"
+              : "Send code"}
         </Button>
-        <Button
-          type="button"
-          size="lg"
-          variant="secondary"
-          onClick={() => sendCode("whatsapp")}
-          loading={loading}
-        >
-          Send code on WhatsApp
-        </Button>
+        {channelMode === "dual" && (
+          <Button
+            type="button"
+            size="lg"
+            variant="secondary"
+            onClick={() => sendCode("whatsapp")}
+            loading={loading}
+          >
+            Send code on WhatsApp
+          </Button>
+        )}
       </form>
 
       <p className="mt-4 text-center text-xs text-gray-400">

@@ -1,0 +1,11 @@
+# Local Supabase CLI config. See https://supabase.com/docs/guides/cli
+# Link your project: npx supabase link --project-ref <ref>
+
+[functions.sms-hook]
+verify_jwt = false
+
+# Uncomment for local Send SMS Hook testing (generate secret in Dashboard → Auth → Hooks):
+# [auth.hook.send_sms]
+# enabled = true
+# uri = "http://host.docker.internal:54321/functions/v1/sms-hook"
+# secrets = "env(SEND_SMS_HOOK_SECRET)"
