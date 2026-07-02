@@ -3,6 +3,12 @@
 All notable changes to this project are recorded here, newest first.
 Timestamps are in IST (UTC+5:30).
 
+## 2026-07-02 — WhatsApp OTP delivery via MSG91 (Send SMS Hook)
+- Phone OTP is now delivered over **WhatsApp** using MSG91 via a Supabase **Send SMS Hook** Edge Function (`supabase/functions/sms-hook/`). Supabase still generates/validates the code and manages sessions (no custom auth), and WhatsApp avoids Indian DLT/SMS registration.
+- Production sign-in is **WhatsApp-only** (single button); development keeps both **SMS** and **WhatsApp** buttons via the new `channelMode` prop. In production the server requests Supabase's `sms` channel so the hook fires; the hook delivers via WhatsApp.
+- Added `supabase/config.toml` (`verify_jwt = false` for the hook) and documented MSG91 secrets in `.env.example` (`MSG91_AUTHKEY`, `MSG91_WA_INTEGRATED_NUMBER`, `MSG91_WA_TEMPLATE_NAME`, …).
+- Updated `ARCHITECTURE.md` (auth flow + diagram, OTP/testing/deploy sections, migrations `001–021`) and the Privacy page (provider **Twilio → MSG91**).
+
 ## 2026-06-29 — Privacy, Terms, About refresh, prominent match times
 - Added `/privacy` and `/terms` tailored to phone OTP, Supabase, optional UPI, and no data selling; footer links **About · Privacy · Terms**.
 - Updated `/about` for current features (member match creation, standby/teams, join-request phone, etc.) and aligned sign-in CTA with the homepage.
