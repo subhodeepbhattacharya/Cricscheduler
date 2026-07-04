@@ -206,6 +206,22 @@ npm run dev:clean    # clears .next cache first (use if stale-chunk errors)
 Do not run `npm run build` while `npm run dev` is running — it can corrupt the
 shared `.next` cache and cause 404/500s until cleared.
 
+## Sign-in methods
+
+Two passwordless OTP methods, both backed by Supabase (which owns OTP generation,
+validation, and sessions):
+
+- **Email OTP** — `signInWithOtp({ email })` / `verifyOtp({ type: "email" })`.
+  Delivered by Supabase's email (custom SMTP in production). This is the
+  **production default** while WhatsApp is pending.
+- **Phone OTP** — delivered over **WhatsApp via MSG91** (see below).
+
+The available methods are environment-driven via the `methods` prop in
+`src/app/auth/page.tsx`: **production is email-only** (`{ email: true, phone:
+false }`); development shows an **Email / Phone** toggle with SMS + WhatsApp
+(`{ email: true, phone: "dual" }`). Email and phone are separate Supabase
+identities (no linking yet).
+
 ## OTP delivery (WhatsApp via MSG91)
 
 Supabase generates and validates the OTP; delivery is customized via the
@@ -234,9 +250,17 @@ For day-to-day local testing, skip the provider entirely using Supabase
 3. In the sign-in form, enter that number, send a code (the hook is not called
    for test numbers), then verify with the static code.
 
-In development the form still exposes both **SMS** and **WhatsApp** buttons
-(`channelMode="dual"`) for exercising Supabase's native providers; production
-renders a single WhatsApp button.
+In development the phone method exposes both **SMS** and **WhatsApp** buttons
+(`phone: "dual"`) for exercising Supabase's native providers; production hides
+phone entirely (email-only) until MSG91/WhatsApp is live.
+
+### Testing email OTP locally
+
+Enable **Auth → Providers → Email** and use the built-in Supabase sender (no SMTP
+needed for testing, but it's rate-limited to a few sends/hour). Ensure the email
+OTP template includes `{{ .Token }}` so a 6-digit code is sent. Then use the
+form's **Email** method, request a code, and verify. For higher volume or real
+delivery, configure custom SMTP (see the deployment checklist).
 
 ### Real delivery (validating MSG91)
 
@@ -306,3 +330,15 @@ See `.env.example` for the authoritative list.
    **Auth → Hooks → Send SMS** (HTTPS →
    `https://<project-ref>.supabase.co/functions/v1/sms-hook`). Confirm the MSG91
    WhatsApp number and authentication template are approved for live use.
+   Production currently hides the WhatsApp button until this is live (see the
+   `methods` prop in `src/app/auth/page.tsx`).
+6. **Email OTP (production's default sign-in)**: enable **Auth → Providers →
+   Email**, and ensure the email OTP template includes the `{{ .Token }}` code
+   (not only `{{ .ConfirmationURL }}`) so users receive a 6-digit code.
+   **Configure custom SMTP** under **Auth → SMTP Settings** — the built-in
+   Supabase sender is rate-limited (~a few/hour) and for testing only.
+   Recommended transactional providers (free tiers): **Resend** (~3k/mo,
+   simplest), **Brevo** (300/day), **SendGrid** (100/day), or **AWS SES** (cheap
+   at scale). Verify your sending domain (SPF/DKIM) for inbox placement. Avoid
+   personal Gmail SMTP in production: ~500/day cap, forced From address, and poor
+   deliverability for transactional mail.
