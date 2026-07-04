@@ -3,6 +3,12 @@
 All notable changes to this project are recorded here, newest first.
 Timestamps are in IST (UTC+5:30).
 
+## 2026-07-04 — Email OTP sign-up and sign-in
+- Added **email one-time-code** auth alongside phone: `sendEmailOtp` / `verifyEmailOtp` use Supabase's native `signInWithOtp({ email })` + `verifyOtp({ type: "email" })`, reusing the existing "enter your code" screen.
+- The sign-in form now has an **Email / Phone** toggle when both are enabled. Methods are environment-driven: **production is email-only** (WhatsApp hidden until Meta Business verification / MSG91 are live); development shows Email + Phone (SMS/WhatsApp) for testing.
+- No schema migration needed — `users.email`/`users.phone` are already nullable and the signup trigger handles email-only accounts.
+- Note: email delivery uses Supabase's built-in sender (rate-limited, testing only); configure custom SMTP before real use. Email and phone remain separate accounts (no identity linking yet).
+
 ## 2026-07-02 — WhatsApp OTP delivery via MSG91 (Send SMS Hook)
 - Phone OTP is now delivered over **WhatsApp** using MSG91 via a Supabase **Send SMS Hook** Edge Function (`supabase/functions/sms-hook/`). Supabase still generates/validates the code and manages sessions (no custom auth), and WhatsApp avoids Indian DLT/SMS registration.
 - Production sign-in is **WhatsApp-only** (single button); development keeps both **SMS** and **WhatsApp** buttons via the new `channelMode` prop. In production the server requests Supabase's `sms` channel so the hook fires; the hook delivers via WhatsApp.

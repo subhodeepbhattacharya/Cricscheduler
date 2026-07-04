@@ -26,7 +26,13 @@ export default async function AuthPage({
         <AuthForm
           next={safeNext}
           initialMode={initialMode}
-          channelMode={process.env.NODE_ENV === "production" ? "whatsapp" : "dual"}
+          methods={
+            process.env.NODE_ENV === "production"
+              ? // WhatsApp OTP is hidden until Meta Business verification / MSG91
+                // are live. Email OTP works today via Supabase, so ship it alone.
+                { email: true, phone: false }
+              : { email: true, phone: "dual" }
+          }
         />
       </div>
     </div>

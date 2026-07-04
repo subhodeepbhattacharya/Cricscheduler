@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { sendOtp, verifyPhoneOtp } from "./actions";
+import { sendOtp, verifyPhoneOtp, sendEmailOtp, verifyEmailOtp } from "./actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { executeRecaptcha } from "@/lib/recaptcha-client";
@@ -9,48 +9,68 @@ import { executeRecaptcha } from "@/lib/recaptcha-client";
 type Channel = "whatsapp" | "sms";
 
 /**
+ * Phone delivery options:
+ * false      — phone sign-in disabled.
  * "dual"     — dev: show both SMS and WhatsApp buttons.
- * "whatsapp" — prod: single WhatsApp button (OTP delivered via MSG91 hook).
+ * "whatsapp" — single WhatsApp button (OTP delivered via MSG91 hook).
  * "sms"      — single SMS button.
  */
-type ChannelMode = "dual" | "whatsapp" | "sms";
+type PhoneMode = false | "dual" | "whatsapp" | "sms";
+
+type AuthMethods = {
+  email: boolean;
+  phone: PhoneMode;
+};
+
+type Method = "email" | "phone";
 
 type Mode = "signin" | "signup";
 
 export function AuthForm({
   next,
   initialMode = "signin",
-  channelMode = "dual",
+  methods = { email: true, phone: "dual" },
 }: {
   next?: string;
   initialMode?: Mode;
-  channelMode?: ChannelMode;
+  methods?: AuthMethods;
 }) {
+  const emailEnabled = methods.email;
+  const phoneMode = methods.phone;
+  const phoneEnabled = phoneMode !== false;
+  const showMethodToggle = emailEnabled && phoneEnabled;
+  const singleChannel: Channel = phoneMode === "sms" ? "sms" : "whatsapp";
+
   const [mode, setMode] = useState<Mode>(initialMode);
+  const [method, setMethod] = useState<Method>(emailEnabled ? "email" : "phone");
   const [step, setStep] = useState<"request" | "verify">("request");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [normalizedPhone, setNormalizedPhone] = useState("");
-  const singleChannel: Channel = channelMode === "sms" ? "sms" : "whatsapp";
+  const [email, setEmail] = useState("");
+  const [identifierType, setIdentifierType] = useState<Method>("email");
+  const [sentTo, setSentTo] = useState("");
   const [channel, setChannel] = useState<Channel>(
-    channelMode === "dual" ? "sms" : singleChannel
+    phoneMode === "sms" ? "sms" : "whatsapp"
   );
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  async function sendCode(viaChannel: Channel) {
-    setError(null);
-    setMessage(null);
-
+  function requireName(): boolean {
     if (mode === "signup" && !name.trim()) {
       setError("Please enter your name to create an account.");
-      return;
+      return false;
     }
+    return true;
+  }
+
+  async function sendPhoneCode(viaChannel: Channel) {
+    setError(null);
+    setMessage(null);
+    if (!requireName()) return;
 
     setLoading(true);
-
     const token = await executeRecaptcha("send_otp");
     const fd = new FormData();
     fd.set("phone", phone);
@@ -66,7 +86,8 @@ export function AuthForm({
       return;
     }
 
-    setNormalizedPhone(result.phone);
+    setIdentifierType("phone");
+    setSentTo(result.phone);
     setChannel(viaChannel);
     setStep("verify");
     setMessage(
@@ -77,16 +98,58 @@ export function AuthForm({
     setLoading(false);
   }
 
+  async function sendEmailCode() {
+    setError(null);
+    setMessage(null);
+    if (!requireName()) return;
+
+    setLoading(true);
+    const token = await executeRecaptcha("send_otp");
+    const fd = new FormData();
+    fd.set("email", email);
+    if (mode === "signup" && name.trim()) fd.set("name", name.trim());
+    if (token) fd.set("recaptchaToken", token);
+    if (next) fd.set("next", next);
+
+    const result = await sendEmailOtp(fd);
+    if (!result.ok) {
+      setError(result.error ?? "Could not send the code. Please try again.");
+      setLoading(false);
+      return;
+    }
+
+    setIdentifierType("email");
+    setSentTo(result.email);
+    setStep("verify");
+    setMessage(`We sent a code to ${result.email}.`);
+    setLoading(false);
+  }
+
+  function resend() {
+    if (identifierType === "email") {
+      sendEmailCode();
+    } else {
+      sendPhoneCode(channel);
+    }
+  }
+
   async function verify() {
     setLoading(true);
     setError(null);
 
     const fd = new FormData();
-    fd.set("phone", normalizedPhone);
     fd.set("token", code);
     if (next) fd.set("next", next);
 
-    const result = await verifyPhoneOtp(fd);
+    let result: { error?: string } | undefined;
+    if (identifierType === "email") {
+      fd.set("email", sentTo);
+      result = await verifyEmailOtp(fd);
+    } else {
+      fd.set("phone", sentTo);
+      result = await verifyPhoneOtp(fd);
+    }
+
     if (result?.error) {
       setError(result.error);
       setLoading(false);
@@ -99,7 +162,7 @@ export function AuthForm({
       <div>
         <h2 className="text-lg font-semibold text-gray-900">Enter your code</h2>
         <p className="mt-1 text-sm text-gray-500">
-          Enter the 6-digit code sent to <span className="font-medium">{normalizedPhone}</span>.
+          Enter the 6-digit code sent to <span className="font-medium">{sentTo}</span>.
         </p>
 
         <form
@@ -137,7 +200,7 @@ export function AuthForm({
         <div className="mt-4 flex items-center justify-between text-sm">
           <button
             type="button"
-            onClick={() => sendCode(channel)}
+            onClick={resend}
             disabled={loading}
             className="font-medium text-emerald-700 hover:text-emerald-800 disabled:opacity-50"
           >
@@ -153,18 +216,26 @@ export function AuthForm({
             }}
             className="font-medium text-gray-500 hover:text-gray-700"
           >
-            Change number
+            {identifierType === "email" ? "Change email" : "Change number"}
           </button>
         </div>
       </div>
     );
   }
 
-  function switchMode(next: Mode) {
-    setMode(next);
+  function switchMode(nextMode: Mode) {
+    setMode(nextMode);
     setError(null);
     setMessage(null);
   }
+
+  function switchMethod(nextMethod: Method) {
+    setMethod(nextMethod);
+    setError(null);
+    setMessage(null);
+  }
+
+  const usingEmail = method === "email";
 
   return (
     <div>
@@ -189,11 +260,38 @@ export function AuthForm({
         </button>
       </div>
 
+      {showMethodToggle && (
+        <div className="mb-4 grid grid-cols-2 gap-1 rounded-lg border border-gray-200 p-1">
+          <button
+            type="button"
+            onClick={() => switchMethod("email")}
+            className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+              usingEmail ? "bg-emerald-600 text-white" : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            Email
+          </button>
+          <button
+            type="button"
+            onClick={() => switchMethod("phone")}
+            className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+              !usingEmail ? "bg-emerald-600 text-white" : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            Phone
+          </button>
+        </div>
+      )}
+
       <form
         className="space-y-4"
         onSubmit={(e) => {
           e.preventDefault();
-          sendCode(channelMode === "dual" ? "sms" : singleChannel);
+          if (usingEmail) {
+            sendEmailCode();
+          } else {
+            sendPhoneCode(phoneMode === "dual" ? "sms" : singleChannel);
+          }
         }}
       >
         {mode === "signup" && (
@@ -207,39 +305,62 @@ export function AuthForm({
             onChange={(e) => setName(e.target.value)}
           />
         )}
-        <Input
-          label="Phone number"
-          name="phone"
-          type="tel"
-          inputMode="tel"
-          autoComplete="tel"
-          required
-          placeholder="+91 98765 43210"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-        />
+
+        {usingEmail ? (
+          <Input
+            label="Email address"
+            name="email"
+            type="email"
+            inputMode="email"
+            autoComplete="email"
+            required
+            placeholder="you@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        ) : (
+          <Input
+            label="Phone number"
+            name="phone"
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
+            required
+            placeholder="+91 98765 43210"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+          />
+        )}
 
         {error && (
           <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>
         )}
 
-        <Button type="submit" size="lg" loading={loading}>
-          {channelMode === "dual"
-            ? "Send code via SMS"
-            : singleChannel === "whatsapp"
-              ? "Send code on WhatsApp"
-              : "Send code"}
-        </Button>
-        {channelMode === "dual" && (
-          <Button
-            type="button"
-            size="lg"
-            variant="secondary"
-            onClick={() => sendCode("whatsapp")}
-            loading={loading}
-          >
-            Send code on WhatsApp
+        {usingEmail ? (
+          <Button type="submit" size="lg" loading={loading}>
+            Send code
           </Button>
+        ) : (
+          <>
+            <Button type="submit" size="lg" loading={loading}>
+              {phoneMode === "dual"
+                ? "Send code via SMS"
+                : singleChannel === "whatsapp"
+                  ? "Send code on WhatsApp"
+                  : "Send code"}
+            </Button>
+            {phoneMode === "dual" && (
+              <Button
+                type="button"
+                size="lg"
+                variant="secondary"
+                onClick={() => sendPhoneCode("whatsapp")}
+                loading={loading}
+              >
+                Send code on WhatsApp
+              </Button>
+            )}
+          </>
         )}
       </form>
 
