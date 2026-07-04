@@ -6,16 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { executeRecaptcha } from "@/lib/recaptcha-client";
 
-type Channel = "whatsapp" | "sms";
-
 /**
  * Phone delivery options:
  * false      — phone sign-in disabled.
- * "dual"     — dev: show both SMS and WhatsApp buttons.
- * "whatsapp" — single WhatsApp button (OTP delivered via MSG91 hook).
- * "sms"      — single SMS button.
+ * "whatsapp" — WhatsApp button (OTP delivered via the MSG91 Send SMS Hook).
+ *
+ * SMS is intentionally not offered as a user-facing sign-in option. (The
+ * server still asks Supabase for the "sms" channel in production purely to fire
+ * the hook, which delivers over WhatsApp — that's internal, not an SMS choice.)
  */
-type PhoneMode = false | "dual" | "whatsapp" | "sms";
+type PhoneMode = false | "whatsapp";
 
 type AuthMethods = {
   email: boolean;
@@ -29,7 +29,7 @@ type Mode = "signin" | "signup";
 export function AuthForm({
   next,
   initialMode = "signin",
-  methods = { email: true, phone: "dual" },
+  methods = { email: true, phone: "whatsapp" },
 }: {
   next?: string;
   initialMode?: Mode;
@@ -39,7 +39,6 @@ export function AuthForm({
   const phoneMode = methods.phone;
   const phoneEnabled = phoneMode !== false;
   const showMethodToggle = emailEnabled && phoneEnabled;
-  const singleChannel: Channel = phoneMode === "sms" ? "sms" : "whatsapp";
 
   const [mode, setMode] = useState<Mode>(initialMode);
   const [method, setMethod] = useState<Method>(emailEnabled ? "email" : "phone");
@@ -49,9 +48,6 @@ export function AuthForm({
   const [email, setEmail] = useState("");
   const [identifierType, setIdentifierType] = useState<Method>("email");
   const [sentTo, setSentTo] = useState("");
-  const [channel, setChannel] = useState<Channel>(
-    phoneMode === "sms" ? "sms" : "whatsapp"
-  );
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -65,7 +61,7 @@ export function AuthForm({
     return true;
   }
 
-  async function sendPhoneCode(viaChannel: Channel) {
+  async function sendPhoneCode() {
     setError(null);
     setMessage(null);
     if (!requireName()) return;
@@ -75,7 +71,7 @@ export function AuthForm({
     const fd = new FormData();
     fd.set("phone", phone);
     if (mode === "signup" && name.trim()) fd.set("name", name.trim());
-    fd.set("channel", viaChannel);
+    fd.set("channel", "whatsapp");
     if (token) fd.set("recaptchaToken", token);
     if (next) fd.set("next", next);
 
@@ -88,13 +84,8 @@ export function AuthForm({
 
     setIdentifierType("phone");
     setSentTo(result.phone);
-    setChannel(viaChannel);
     setStep("verify");
-    setMessage(
-      viaChannel === "sms"
-        ? `We sent a code via SMS to ${result.phone}.`
-        : `We sent a code on WhatsApp to ${result.phone}.`
-    );
+    setMessage(`We sent a code on WhatsApp to ${result.phone}.`);
     setLoading(false);
   }
 
@@ -129,7 +120,7 @@ export function AuthForm({
     if (identifierType === "email") {
       sendEmailCode();
     } else {
-      sendPhoneCode(channel);
+      sendPhoneCode();
     }
   }
 
@@ -290,7 +281,7 @@ export function AuthForm({
           if (usingEmail) {
             sendEmailCode();
           } else {
-            sendPhoneCode(phoneMode === "dual" ? "sms" : singleChannel);
+            sendPhoneCode();
           }
         }}
       >
@@ -336,32 +327,9 @@ export function AuthForm({
           <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>
         )}
 
-        {usingEmail ? (
-          <Button type="submit" size="lg" loading={loading}>
-            Send code
-          </Button>
-        ) : (
-          <>
-            <Button type="submit" size="lg" loading={loading}>
-              {phoneMode === "dual"
-                ? "Send code via SMS"
-                : singleChannel === "whatsapp"
-                  ? "Send code on WhatsApp"
-                  : "Send code"}
-            </Button>
-            {phoneMode === "dual" && (
-              <Button
-                type="button"
-                size="lg"
-                variant="secondary"
-                onClick={() => sendPhoneCode("whatsapp")}
-                loading={loading}
-              >
-                Send code on WhatsApp
-              </Button>
-            )}
-          </>
-        )}
+        <Button type="submit" size="lg" loading={loading}>
+          {usingEmail ? "Send code" : "Send code on WhatsApp"}
+        </Button>
       </form>
 
       <p className="mt-4 text-center text-xs text-gray-400">
