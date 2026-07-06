@@ -3,6 +3,10 @@
 All notable changes to this project are recorded here, newest first.
 Timestamps are in IST (UTC+5:30).
 
+## 2026-07-06 — Update contact email to oneeightai@gmail.com
+- Changed the public contact address to **oneeightai@gmail.com** in the bot-protected `ObfuscatedEmail` component (used by About/Privacy/Terms) — still rendered as `oneeightai [at] gmail [dot] com` with no literal `@` in the DOM and the `mailto:` assembled only in JS on click.
+- Updated the licensing-inquiries contact in `LICENSE` (and the proprietary-license rule template) to match.
+
 ## 2026-07-06 — Prefer WhatsApp sign-in; de-emphasize email
 - The sign-in form now **defaults to phone (WhatsApp)** instead of email.
 - Replaced the equal Email/Phone toggle with a quieter text link: email is now a "No WhatsApp? Sign in with email instead" fallback (and a matching link back to WhatsApp when on email). No change to the underlying OTP flows.

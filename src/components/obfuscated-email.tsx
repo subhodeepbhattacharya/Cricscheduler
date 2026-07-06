@@ -1,6 +1,6 @@
 "use client";
 
-const LOCAL = "bhattacharya.subhodeep";
+const LOCAL = "oneeightai";
 const DOMAIN = "gmail.com";
 
 /** Shown to humans; no @ in the DOM to deter simple scrapers. */
