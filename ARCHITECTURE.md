@@ -11,7 +11,7 @@ ORM, or client state-management library.
 |-------|------------|
 | Frontend | Next.js 15 (App Router), React 19, TypeScript 5.8, Tailwind CSS 4 |
 | Backend | Next.js Server Components + Server Actions |
-| Auth | Supabase Auth (phone OTP) via `@supabase/ssr` (cookie sessions); OTP delivered over WhatsApp via MSG91 through a Supabase Send SMS Hook (Edge Function) |
+| Auth | Supabase Auth (passwordless OTP) via `@supabase/ssr` (cookie sessions); **email OTP** (Supabase) and **phone OTP delivered over WhatsApp** via MSG91 through a Supabase Send SMS Hook (Edge Function) |
 | Database | Supabase PostgreSQL with Row Level Security + SECURITY DEFINER RPCs |
 | Integrations | Google Maps Places (location picker), UPI intent deep links |
 | Tooling | ESLint 9, nvm, npm |
@@ -212,15 +212,16 @@ Two passwordless OTP methods, both backed by Supabase (which owns OTP generation
 validation, and sessions):
 
 - **Email OTP** — `signInWithOtp({ email })` / `verifyOtp({ type: "email" })`.
-  Delivered by Supabase's email (custom SMTP in production). This is the
-  **production default** while WhatsApp is pending.
+  Delivered by Supabase's email (built-in sender; configure custom SMTP for
+  production volume).
 - **Phone OTP** — delivered over **WhatsApp via MSG91** (see below).
 
-The available methods are environment-driven via the `methods` prop in
-`src/app/auth/page.tsx`: **production is email-only** (`{ email: true, phone:
-false }`); development shows an **Email / Phone** toggle with SMS + WhatsApp
-(`{ email: true, phone: "dual" }`). Email and phone are separate Supabase
-identities (no linking yet).
+Both methods are live in **all environments** via the `methods` prop in
+`src/app/auth/page.tsx` (`{ email: true, phone: "whatsapp" }`), so the sign-in
+form shows an **Email / Phone** toggle where the phone option sends only over
+WhatsApp. **SMS is not offered as a user-facing sign-in option** (`PhoneMode` is
+`false | "whatsapp"`). Email and phone are separate Supabase identities (no
+linking yet).
 
 ## OTP delivery (WhatsApp via MSG91)
 
@@ -233,9 +234,10 @@ still owns OTP validation (`verifyOtp`) and session creation — only the delive
 channel is swapped, so no custom auth is needed. WhatsApp is not subject to
 Indian DLT/SMS registration.
 
-The client always requests Supabase's `sms` channel in production (that's what
-fires the Send SMS Hook); the `whatsapp` channel would bypass the hook. The
-sign-in form's copy says WhatsApp because that's the actual delivery channel.
+The client always requests Supabase's `sms` channel (in every environment) —
+that's what fires the Send SMS Hook; the `whatsapp` channel would bypass the
+hook and use Supabase's native provider. The sign-in form's copy says WhatsApp
+because that's the actual delivery channel.
 
 ### Testing phone OTP locally
 
@@ -250,9 +252,9 @@ For day-to-day local testing, skip the provider entirely using Supabase
 3. In the sign-in form, enter that number, send a code (the hook is not called
    for test numbers), then verify with the static code.
 
-In development the phone method exposes both **SMS** and **WhatsApp** buttons
-(`phone: "dual"`) for exercising Supabase's native providers; production hides
-phone entirely (email-only) until MSG91/WhatsApp is live.
+The phone method shows a single **WhatsApp** button in all environments
+(`phone: "whatsapp"`); there is no SMS button. Test phone numbers still work for
+exercising the flow without sending a real WhatsApp message.
 
 ### Testing email OTP locally
 
@@ -330,9 +332,9 @@ See `.env.example` for the authoritative list.
    **Auth → Hooks → Send SMS** (HTTPS →
    `https://<project-ref>.supabase.co/functions/v1/sms-hook`). Confirm the MSG91
    WhatsApp number and authentication template are approved for live use.
-   Production currently hides the WhatsApp button until this is live (see the
-   `methods` prop in `src/app/auth/page.tsx`).
-6. **Email OTP (production's default sign-in)**: enable **Auth → Providers →
+   WhatsApp is enabled in all environments via the `methods` prop in
+   `src/app/auth/page.tsx`.
+6. **Email OTP**: enable **Auth → Providers →
    Email**, and ensure the email OTP template includes the `{{ .Token }}` code
    (not only `{{ .ConfirmationURL }}`) so users receive a 6-digit code.
    **Configure custom SMTP** under **Auth → SMTP Settings** — the built-in

@@ -3,6 +3,9 @@
 All notable changes to this project are recorded here, newest first.
 Timestamps are in IST (UTC+5:30).
 
+## 2026-07-06 — Sync ARCHITECTURE.md with current auth
+- Updated ARCHITECTURE.md to reflect the live auth model: **email OTP + WhatsApp OTP in all environments** (`{ email: true, phone: "whatsapp" }`), SMS removed as a user-facing option (`PhoneMode = false | "whatsapp"`), and `sendOtp` always requesting Supabase's `sms` channel to fire the hook. Refreshed the tech-stack row, sign-in methods, testing notes, and deployment checklist items 5–6.
+
 ## 2026-07-06 — Align About/Privacy/Terms with current auth
 - Updated the About, Privacy, and Terms pages to reflect **email + WhatsApp** sign-in (SMS removed as a user-facing option): reworded auth copy, noted phone numbers may be absent for email-only accounts, and listed Supabase as the sender of email sign-in codes (MSG91 for WhatsApp).
 - Bumped the Terms "Last updated" date to July 2026.
