@@ -50,6 +50,7 @@ export interface Match {
   max_players: number;
   fee_per_player: number;
   prepayment_required: boolean;
+  host_upi_vpa: string | null;
   status: MatchStatus;
   team_a_name: string | null;
   team_b_name: string | null;

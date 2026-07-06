@@ -46,7 +46,6 @@ Edit `.env.local`:
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
 NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your-google-maps-api-key
-NEXT_PUBLIC_UPI_MERCHANT_VPA=yourname@upi
 NEXT_PUBLIC_APP_NAME=CricScheduler
 ```
 

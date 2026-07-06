@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireAuth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { getLocalTodayDateString } from "@/lib/utils";
+import { getLocalTodayDateString, normalizeUpiVpa, isValidUpiVpa } from "@/lib/utils";
 import { isHostOrCoHost, isActiveMember } from "@/lib/match-logic";
 
 async function ensureUserProfile(user: {
@@ -134,9 +134,21 @@ export async function createMatch(groupId: string, formData: FormData) {
   const maxPlayers = parseInt(formData.get("maxPlayers") as string, 10);
   const feePerPlayer = parseFloat(formData.get("feePerPlayer") as string) || 0;
   const prepaymentRequired = formData.get("prepaymentRequired") === "on";
+  const hostUpiVpaRaw = ((formData.get("hostUpiVpa") as string) || "").trim();
 
   if (prepaymentRequired && feePerPlayer <= 0) {
     return { error: "Fee per player must be greater than ₹0 when UPI prepayment is required." };
+  }
+
+  let hostUpiVpa: string | null = null;
+  if (prepaymentRequired) {
+    if (!hostUpiVpaRaw) {
+      return { error: "Enter your UPI ID (e.g. name@okicici) when prepayment is required." };
+    }
+    hostUpiVpa = normalizeUpiVpa(hostUpiVpaRaw);
+    if (!isValidUpiVpa(hostUpiVpa)) {
+      return { error: "Enter a valid UPI ID (e.g. 9876543210@paytm or name@okicici)." };
+    }
   }
 
   const matchId = randomUUID();
@@ -155,6 +167,7 @@ export async function createMatch(groupId: string, formData: FormData) {
     max_players: maxPlayers,
     fee_per_player: feePerPlayer,
     prepayment_required: prepaymentRequired,
+    host_upi_vpa: hostUpiVpa,
     status: "SCHEDULED",
   });
 

@@ -98,7 +98,8 @@ Representative RPCs:
 
 - **Google Maps Places** runs in the browser to pick a match location and
   capture name/address/maps link.
-- **UPI payment** is a `upi://pay?...` deep link handed to the user's UPI app.
+- **UPI payment** is a `upi://pay?...` deep link to the **match host's UPI ID**
+  (`host_upi_vpa`, set when creating/editing a match with prepayment enabled).
   There is **no payment gateway**; the host **manually verifies** payment and the
   server action updates the `payments` row, which in turn confirms the spot.
 
@@ -190,7 +191,7 @@ src/
     match-logic.ts             role + RSVP helpers
     phone.ts                   E.164 phone normalize/validate
     utils.ts                   formatting, UPI URL builder
-supabase/migrations/           001–021 SQL migrations (schema, RLS, RPCs)
+supabase/migrations/           001–022 SQL migrations (schema, RLS, RPCs)
 supabase/functions/sms-hook/   Send SMS Hook Edge Function (WhatsApp via MSG91)
 ```
 
@@ -330,8 +331,7 @@ fit and has no free tier.
 | `NEXT_PUBLIC_SUPABASE_URL` | client + server | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | client + server | Supabase publishable (anon) key |
 | `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | client | Maps Places (restrict by HTTP referrer) |
-| `NEXT_PUBLIC_UPI_MERCHANT_VPA` | client | Host UPI VPA used to build `upi://pay` links |
-| `NEXT_PUBLIC_APP_NAME` | client | App display name (e.g. CricScheduler) |
+| `NEXT_PUBLIC_APP_NAME` | client | App display name in UPI pay links (e.g. CricScheduler) |
 | `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` | client | reCAPTCHA v3 site key |
 | `RECAPTCHA_SECRET_KEY` | server only | reCAPTCHA v3 secret key |
 | `RECAPTCHA_MIN_SCORE` | server only | Min score to accept (default 0.5); captcha is skipped if keys are unset |
@@ -344,7 +344,7 @@ See `.env.example` for the authoritative list.
    production domain and add it (plus `*.vercel.app` preview URLs) to **Redirect
    URLs**, so OTP/auth redirects work in production.
 2. **Run migrations** against the production database: apply
-   `supabase/migrations/001`–`021` (Supabase SQL Editor or `supabase db push`).
+   `supabase/migrations/001`–`022` (Supabase SQL Editor or `supabase db push`).
    After DDL changes, run `NOTIFY pgrst, 'reload schema';`.
 3. **reCAPTCHA**: add the production domain to the allowed domains in the
    reCAPTCHA admin console.

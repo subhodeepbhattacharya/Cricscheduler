@@ -39,6 +39,7 @@ export function MatchForm({ mode, groupId, match }: MatchFormProps) {
       ? String(Math.round(Number(match.fee_per_player) * match.max_players * 100) / 100)
       : ""
   );
+  const [hostUpiVpa, setHostUpiVpa] = useState(match?.host_upi_vpa ?? "");
   const [selectedLocation, setSelectedLocation] = useState<SelectedLocation | null>(
     match
       ? {
@@ -88,6 +89,10 @@ export function MatchForm({ mode, groupId, match }: MatchFormProps) {
         setError("Enter the total amount (greater than ₹0) when UPI prepayment is required.");
         return;
       }
+      if (!hostUpiVpa.trim()) {
+        setError("Enter your UPI ID (e.g. name@okicici) so players can pay you.");
+        return;
+      }
     }
 
     setLoading(true);
@@ -98,6 +103,7 @@ export function MatchForm({ mode, groupId, match }: MatchFormProps) {
     if (prepaymentRequired) {
       formData.set("prepaymentRequired", "on");
       formData.set("feePerPlayer", String(perPlayer));
+      formData.set("hostUpiVpa", hostUpiVpa.trim());
     }
 
     const result =
@@ -211,14 +217,26 @@ export function MatchForm({ mode, groupId, match }: MatchFormProps) {
         description="Players must pay before their spot is confirmed"
       />
       {prepaymentRequired && (
-        <p className="-mt-2 rounded-lg bg-gray-50 px-3 py-2 text-sm text-gray-600">
-          {perPlayer > 0
-            ? `Each player pays ₹${perPlayer.toFixed(2)} (₹${totalNum} ÷ ${playersNum} players, rounded up).` +
-              (perPlayer * playersNum > totalNum
-                ? ` Collects ₹${(perPlayer * playersNum).toFixed(2)} if all ${playersNum} pay.`
-                : "")
-            : "Each player's fee = total amount ÷ max players (rounded up)."}
-        </p>
+        <>
+          <Input
+            label="Your UPI ID *"
+            name="hostUpiVpa"
+            required
+            placeholder="e.g. name@okicici or 9876543210@paytm"
+            value={hostUpiVpa}
+            onChange={(e) => setHostUpiVpa(e.target.value)}
+            autoComplete="off"
+          />
+          <p className="-mt-2 rounded-lg bg-gray-50 px-3 py-2 text-sm text-gray-600">
+            {perPlayer > 0
+              ? `Each player pays ₹${perPlayer.toFixed(2)} (₹${totalNum} ÷ ${playersNum} players, rounded up).` +
+                (perPlayer * playersNum > totalNum
+                  ? ` Collects ₹${(perPlayer * playersNum).toFixed(2)} if all ${playersNum} pay.`
+                  : "")
+              : "Each player's fee = total amount ÷ max players (rounded up)."}
+            {" "}Payments go directly to your UPI ID.
+          </p>
+        </>
       )}
       {error && <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>}
       <Button type="submit" size="lg" loading={loading}>

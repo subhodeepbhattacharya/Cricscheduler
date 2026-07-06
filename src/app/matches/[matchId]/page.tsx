@@ -165,7 +165,12 @@ export default async function MatchDetailPage({
                 : "Free"}
             </p>
             {typedMatch.prepayment_required && (
-              <p className="text-xs text-amber-600">Prepayment required</p>
+              <>
+                <p className="text-xs text-amber-600">Prepayment required</p>
+                {typedMatch.host_upi_vpa && (
+                  <p className="text-xs text-gray-500">Pay host via UPI</p>
+                )}
+              </>
             )}
           </div>
         </div>

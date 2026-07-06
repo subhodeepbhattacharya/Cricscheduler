@@ -31,14 +31,14 @@ export function generateTransactionRef(): string {
 }
 
 export function buildUpiIntentUrl(params: {
+  vpa: string;
   amount: number;
   transactionRef: string;
   note: string;
 }): string {
-  const vpa = process.env.NEXT_PUBLIC_UPI_MERCHANT_VPA ?? "merchant@upi";
   const appName = process.env.NEXT_PUBLIC_APP_NAME ?? "CricScheduler";
   const searchParams = new URLSearchParams({
-    pa: vpa,
+    pa: params.vpa,
     pn: appName,
     am: params.amount.toFixed(2),
     cu: "INR",
@@ -46,6 +46,15 @@ export function buildUpiIntentUrl(params: {
     tr: params.transactionRef,
   });
   return `upi://pay?${searchParams.toString()}`;
+}
+
+/** Normalize and validate a UPI Virtual Payment Address (e.g. name@okicici). */
+export function normalizeUpiVpa(raw: string): string {
+  return raw.trim().toLowerCase();
+}
+
+export function isValidUpiVpa(vpa: string): boolean {
+  return /^[a-z0-9._-]{2,256}@[a-z0-9._-]{2,64}$/i.test(vpa);
 }
 
 export function formatCurrency(amount: number): string {

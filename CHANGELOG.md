@@ -3,6 +3,10 @@
 All notable changes to this project are recorded here, newest first.
 Timestamps are in IST (UTC+5:30).
 
+## 2026-07-06 — Per-match host UPI ID (remove global VPA env var)
+- UPI prepayment now uses the **host's UPI ID** set on each match (`host_upi_vpa` column, migration `022_match_host_upi_vpa.sql`) instead of a global `NEXT_PUBLIC_UPI_MERCHANT_VPA`. The match form shows a required "Your UPI ID" field when prepayment is enabled; `buildUpiIntentUrl` uses that VPA for `upi://pay` links.
+- Removed `NEXT_PUBLIC_UPI_MERCHANT_VPA` from env docs; payments go directly to the match host.
+
 ## 2026-07-06 — Clarify auth rate limits (phone/WhatsApp is limited too)
 - Added a **Rate limits** section to ARCHITECTURE.md correcting a common misconception: **both** email and phone/WhatsApp sign-in are rate-limited by Supabase. Email (built-in sender) is hard-locked at **2/hour** until custom SMTP; phone/WhatsApp OTP goes through `/auth/v1/otp` first (**30 OTPs/hour project-wide + 60s per-user cooldown**, both adjustable in Auth → Rate Limits without SMTP). Noted the OTP bucket is shared across email+phone and that MSG91 has its own WhatsApp quotas.
 - Reworded the email testing note to say the built-in sender is fixed at 2/hour (not "a few/hour") and link to the new section.

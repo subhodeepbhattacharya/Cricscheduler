@@ -16,6 +16,8 @@ const NOT_A_MEMBER_ERROR =
   "You must be an approved member of this group to RSVP. Ask the host for an invite link.";
 import {
   buildUpiIntentUrl,
+  normalizeUpiVpa,
+  isValidUpiVpa,
   generateTransactionRef,
   getLocalTodayDateString,
   isMatchElapsed,
@@ -81,8 +83,16 @@ export async function initiatePayment(matchId: string, groupId: string) {
   if (isMatchElapsed(match.date, match.start_time)) return { error: MATCH_ELAPSED_ERROR };
   if (!match.prepayment_required) return { error: "Prepayment not required" };
 
+  const hostVpa = match.host_upi_vpa?.trim();
+  if (!hostVpa) {
+    return {
+      error: "This match has no host UPI ID configured. Ask the host to edit the match.",
+    };
+  }
+
   const transactionRef = generateTransactionRef();
   const upiIntentUrl = buildUpiIntentUrl({
+    vpa: hostVpa,
     amount: Number(match.fee_per_player),
     transactionRef,
     note: `${match.title} - ${transactionRef}`,
@@ -382,6 +392,7 @@ function parseMatchFormData(formData: FormData) {
   const maxPlayers = parseInt(formData.get("maxPlayers") as string, 10);
   const feePerPlayer = parseFloat(formData.get("feePerPlayer") as string) || 0;
   const prepaymentRequired = formData.get("prepaymentRequired") === "on";
+  const hostUpiVpaRaw = ((formData.get("hostUpiVpa") as string) || "").trim();
 
   return {
     title,
@@ -393,6 +404,7 @@ function parseMatchFormData(formData: FormData) {
     maxPlayers,
     feePerPlayer,
     prepaymentRequired,
+    hostUpiVpaRaw,
   };
 }
 
@@ -424,6 +436,17 @@ export async function updateMatch(matchId: string, formData: FormData) {
     return { error: "Fee per player must be greater than ₹0 when UPI prepayment is required." };
   }
 
+  let hostUpiVpa: string | null = null;
+  if (parsed.prepaymentRequired) {
+    if (!parsed.hostUpiVpaRaw) {
+      return { error: "Enter your UPI ID (e.g. name@okicici) when prepayment is required." };
+    }
+    hostUpiVpa = normalizeUpiVpa(parsed.hostUpiVpaRaw);
+    if (!isValidUpiVpa(hostUpiVpa)) {
+      return { error: "Enter a valid UPI ID (e.g. 9876543210@paytm or name@okicici)." };
+    }
+  }
+
   const confirmedCount = await getConfirmedCount(matchId);
   if (parsed.maxPlayers < confirmedCount) {
     return {
@@ -444,6 +467,7 @@ export async function updateMatch(matchId: string, formData: FormData) {
     p_max_players: parsed.maxPlayers,
     p_fee_per_player: parsed.feePerPlayer,
     p_prepayment_required: parsed.prepaymentRequired,
+    p_host_upi_vpa: hostUpiVpa ?? "",
   });
 
   if (rpcError) {
@@ -454,7 +478,7 @@ export async function updateMatch(matchId: string, formData: FormData) {
     if (rpcMissing) {
       return {
         error:
-          "Match update is not available yet. Run supabase/migrations/009_update_match_rpc.sql and 010_fix_matches_rls_recursion.sql in the Supabase SQL Editor.",
+          "Match update is not available yet. Run supabase/migrations/009_update_match_rpc.sql, 010_fix_matches_rls_recursion.sql, and 022_match_host_upi_vpa.sql in the Supabase SQL Editor.",
       };
     }
 
