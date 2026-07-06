@@ -41,7 +41,8 @@ export function AuthForm({
   const showMethodToggle = emailEnabled && phoneEnabled;
 
   const [mode, setMode] = useState<Mode>(initialMode);
-  const [method, setMethod] = useState<Method>(emailEnabled ? "email" : "phone");
+  // Phone (WhatsApp) is the preferred method; email is a quieter fallback.
+  const [method, setMethod] = useState<Method>(phoneEnabled ? "phone" : "email");
   const [step, setStep] = useState<"request" | "verify">("request");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -251,29 +252,6 @@ export function AuthForm({
         </button>
       </div>
 
-      {showMethodToggle && (
-        <div className="mb-4 grid grid-cols-2 gap-1 rounded-lg border border-gray-200 p-1">
-          <button
-            type="button"
-            onClick={() => switchMethod("email")}
-            className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-              usingEmail ? "bg-emerald-600 text-white" : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            Email
-          </button>
-          <button
-            type="button"
-            onClick={() => switchMethod("phone")}
-            className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-              !usingEmail ? "bg-emerald-600 text-white" : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            Phone
-          </button>
-        </div>
-      )}
-
       <form
         className="space-y-4"
         onSubmit={(e) => {
@@ -332,7 +310,35 @@ export function AuthForm({
         </Button>
       </form>
 
-      <p className="mt-4 text-center text-xs text-gray-400">
+      {showMethodToggle && (
+        <p className="mt-4 text-center text-xs text-gray-400">
+          {usingEmail ? (
+            <>
+              Prefer WhatsApp?{" "}
+              <button
+                type="button"
+                onClick={() => switchMethod("phone")}
+                className="font-medium text-gray-500 underline hover:text-gray-700"
+              >
+                Use your phone instead
+              </button>
+            </>
+          ) : (
+            <>
+              No WhatsApp?{" "}
+              <button
+                type="button"
+                onClick={() => switchMethod("email")}
+                className="font-medium text-gray-500 underline hover:text-gray-700"
+              >
+                Sign in with email instead
+              </button>
+            </>
+          )}
+        </p>
+      )}
+
+      <p className="mt-3 text-center text-xs text-gray-400">
         {mode === "signup"
           ? "We'll send a one-time code to create your account."
           : "We'll send a one-time code to sign in to your account."}

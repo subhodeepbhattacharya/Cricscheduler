@@ -3,6 +3,10 @@
 All notable changes to this project are recorded here, newest first.
 Timestamps are in IST (UTC+5:30).
 
+## 2026-07-06 — Prefer WhatsApp sign-in; de-emphasize email
+- The sign-in form now **defaults to phone (WhatsApp)** instead of email.
+- Replaced the equal Email/Phone toggle with a quieter text link: email is now a "No WhatsApp? Sign in with email instead" fallback (and a matching link back to WhatsApp when on email). No change to the underlying OTP flows.
+
 ## 2026-07-06 — Sync ARCHITECTURE.md with current auth
 - Updated ARCHITECTURE.md to reflect the live auth model: **email OTP + WhatsApp OTP in all environments** (`{ email: true, phone: "whatsapp" }`), SMS removed as a user-facing option (`PhoneMode = false | "whatsapp"`), and `sendOtp` always requesting Supabase's `sms` channel to fire the hook. Refreshed the tech-stack row, sign-in methods, testing notes, and deployment checklist items 5–6.
 
