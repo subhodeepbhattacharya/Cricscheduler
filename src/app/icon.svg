@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="CricScheduler">
+  <rect width="32" height="32" rx="7" fill="#15803d"/>
+  <!-- cricket bat -->
+  <g transform="translate(6 5) rotate(-35 8 12)">
+    <rect x="6.5" y="0" width="3" height="9" rx="1.5" fill="#fcd34d"/>
+    <rect x="4" y="8" width="8" height="14" rx="2" fill="#fef3c7"/>
+    <rect x="5" y="9" width="6" height="2" rx="1" fill="#fde68a" opacity="0.8"/>
+  </g>
+  <!-- cricket ball -->
+  <circle cx="22.5" cy="9.5" r="5.5" fill="#dc2626"/>
+  <path
+    d="M19.2 7.2c1.8-.8 3.8-.4 5.1 1.1M17.8 11.8c1.9 1.5 4.6 1.7 6.7.3"
+    stroke="#fecaca"
+    stroke-width="1.1"
+    stroke-linecap="round"
+    fill="none"
+  />
+</svg>

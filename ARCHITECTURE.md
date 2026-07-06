@@ -342,7 +342,10 @@ See `.env.example` for the authoritative list.
 
 1. **Supabase Auth → URL Configuration**: set the **Site URL** to your
    production domain and add it (plus `*.vercel.app` preview URLs) to **Redirect
-   URLs**, so OTP/auth redirects work in production.
+   URLs**, so OTP/auth redirects work in production. Add both apex and `www` if
+   you serve both (e.g. `https://cricscheduler.com/**` and
+   `https://www.cricscheduler.com/**`). Prefer one **canonical** URL in Site URL;
+   auth cookies are scoped to `.cricscheduler.com` so sessions work on both.
 2. **Run migrations** against the production database: apply
    `supabase/migrations/001`–`022` (Supabase SQL Editor or `supabase db push`).
    After DDL changes, run `NOTIFY pgrst, 'reload schema';`.

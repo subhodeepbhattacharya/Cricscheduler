@@ -1,4 +1,5 @@
 import { createBrowserClient } from "@supabase/ssr";
+import { getAuthCookieOptions } from "@/lib/auth-cookies";
 
 function getSupabaseKey() {
   return (
@@ -8,8 +9,10 @@ function getSupabaseKey() {
 }
 
 export function createClient() {
+  const host = typeof window !== "undefined" ? window.location.hostname : "";
   return createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    getSupabaseKey()
+    getSupabaseKey(),
+    { cookieOptions: getAuthCookieOptions(host) }
   );
 }
