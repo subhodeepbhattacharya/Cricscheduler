@@ -259,10 +259,11 @@ exercising the flow without sending a real WhatsApp message.
 ### Testing email OTP locally
 
 Enable **Auth → Providers → Email** and use the built-in Supabase sender (no SMTP
-needed for testing, but it's rate-limited to a few sends/hour). Ensure the email
-OTP template includes `{{ .Token }}` so a 6-digit code is sent. Then use the
-form's **Email** method, request a code, and verify. For higher volume or real
-delivery, configure custom SMTP (see the deployment checklist).
+needed for testing, but it's hard-locked at **2 emails/hour** until you configure
+custom SMTP — see [Rate limits](#rate-limits)). Ensure the email OTP template
+includes `{{ .Token }}` so a 6-digit code is sent. Then use the form's **Email**
+method, request a code, and verify. For higher volume or real delivery, configure
+custom SMTP (see the deployment checklist).
 
 ### Real delivery (validating MSG91)
 
@@ -275,6 +276,30 @@ Deploy the Edge Function and enable the hook (see deployment below). You need:
 
 Check **Edge Functions → sms-hook → Logs** and the MSG91 dashboard if a code
 doesn't arrive.
+
+## Rate limits
+
+**Both** sign-in methods are rate-limited by Supabase Auth — WhatsApp/phone is
+_not_ unlimited. The important difference is what you can change and where:
+
+- **Email (built-in sender)** — hard-locked at **2 emails/hour, project-wide**.
+  This cannot be raised in the dashboard; the only way to change it is to
+  configure **custom SMTP** (or a Send Email hook). Custom SMTP starts at
+  30/hour and is then adjustable under **Auth → Rate Limits**.
+- **Phone / WhatsApp** — the request goes through Supabase's phone OTP endpoint
+  (`/auth/v1/otp`, `sms` channel) _before_ the MSG91 hook is called, so Supabase
+  limits apply first:
+  - **30 OTPs/hour, project-wide** (default; `rate_limit_otp`) — **adjustable
+    now** in **Auth → Rate Limits** (no SMTP needed, since the phone provider is
+    enabled).
+  - **60-second per-user cooldown** between OTP requests to the same number
+    (adjustable).
+  - `rate_limit_sms_sent` also applies.
+
+Two caveats: (1) the 30 OTPs/hour bucket is **shared project-wide across email
+and phone OTP** requests, so heavy email testing eats into the same allowance;
+(2) **MSG91 has its own WhatsApp quotas/throughput** limits, independent of
+Supabase — check your MSG91 plan for launch volumes.
 
 ## Deployment
 
