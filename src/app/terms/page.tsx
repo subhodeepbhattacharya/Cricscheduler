@@ -15,7 +15,7 @@ export default function TermsPage() {
 
       <div className="mt-4">
         <h1 className="text-2xl font-bold text-gray-900">Terms of Service</h1>
-        <p className="mt-2 text-sm text-gray-500">Last updated: June 2026</p>
+        <p className="mt-2 text-sm text-gray-500">Last updated: July 2026</p>
         <p className="mt-3 text-sm leading-relaxed text-gray-600">
           These terms govern your use of CricScheduler (&quot;the Service&quot;), operated by
           Subhodeep B. By creating an account or using the Service, you agree to these terms. If you
@@ -36,10 +36,10 @@ export default function TermsPage() {
       <section className="mt-8 space-y-3">
         <h2 className="text-lg font-semibold text-gray-900">Accounts</h2>
         <ul className="list-disc space-y-2 pl-5 text-sm leading-relaxed text-gray-600">
-          <li>You sign in with a one-time code sent to your phone via SMS or WhatsApp.</li>
-          <li>You must provide accurate information (such as your name) and keep access to your phone secure.</li>
+          <li>You sign in with a one-time code sent to your email or your phone via WhatsApp.</li>
+          <li>You must provide accurate information (such as your name) and keep access to your email or phone secure.</li>
           <li>You are responsible for activity under your account.</li>
-          <li>One person should not share an account; each player should use their own phone number.</li>
+          <li>One person should not share an account; each player should use their own email or phone number.</li>
         </ul>
       </section>
 
@@ -49,7 +49,7 @@ export default function TermsPage() {
           Groups are managed by hosts and co-hosts. Hosts decide who may join, may remove members, and
           can verify payments or assign teams. Hosts are responsible for approving only people they
           know from their real-world cricket group. CricScheduler does not verify WhatsApp membership
-          or identity beyond phone-based sign-in.
+          or identity beyond email or phone-based sign-in.
         </p>
       </section>
 
@@ -79,7 +79,7 @@ export default function TermsPage() {
         <ul className="list-disc space-y-2 pl-5 text-sm leading-relaxed text-gray-600">
           <li>Use the Service for unlawful, harassing, or fraudulent purposes.</li>
           <li>Attempt to bypass security, scrape data, or overload our systems.</li>
-          <li>Impersonate others or use phone numbers you do not control.</li>
+          <li>Impersonate others or use phone numbers or email addresses you do not control.</li>
           <li>Reverse engineer, copy, or resell the Service or its software.</li>
         </ul>
       </section>

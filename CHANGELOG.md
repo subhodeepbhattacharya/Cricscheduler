@@ -3,6 +3,10 @@
 All notable changes to this project are recorded here, newest first.
 Timestamps are in IST (UTC+5:30).
 
+## 2026-07-06 — Align About/Privacy/Terms with current auth
+- Updated the About, Privacy, and Terms pages to reflect **email + WhatsApp** sign-in (SMS removed as a user-facing option): reworded auth copy, noted phone numbers may be absent for email-only accounts, and listed Supabase as the sender of email sign-in codes (MSG91 for WhatsApp).
+- Bumped the Terms "Last updated" date to July 2026.
+
 ## 2026-07-06 — WhatsApp OTP live (email + WhatsApp in all environments)
 - Enabled **WhatsApp OTP in production** alongside email (`{ email: true, phone: "whatsapp" }` in `src/app/auth/page.tsx`) now that Meta Business verification and the MSG91 authentication template are live.
 - `sendOtp` now always requests Supabase's `sms` channel (every environment) so the MSG91 Send SMS Hook fires consistently; the `whatsapp` channel would bypass the hook. Delivery is still WhatsApp via MSG91.

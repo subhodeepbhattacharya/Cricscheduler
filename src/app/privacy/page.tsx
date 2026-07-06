@@ -27,8 +27,9 @@ export default function PrivacyPage() {
         <h2 className="text-lg font-semibold text-gray-900">Information we collect</h2>
         <ul className="list-disc space-y-2 pl-5 text-sm leading-relaxed text-gray-600">
           <li>
-            <span className="font-medium text-gray-800">Account data:</span> phone number, display
-            name, and optional email when you sign up or sign in.
+            <span className="font-medium text-gray-800">Account data:</span> a display name and the
+            phone number or email address you use to sign in (you may have both if you use both
+            methods).
           </li>
           <li>
             <span className="font-medium text-gray-800">Group &amp; match data:</span> group names,
@@ -56,7 +57,7 @@ export default function PrivacyPage() {
       <section className="mt-8 space-y-3">
         <h2 className="text-lg font-semibold text-gray-900">How we use your information</h2>
         <ul className="list-disc space-y-2 pl-5 text-sm leading-relaxed text-gray-600">
-          <li>Authenticate you via one-time codes sent to your phone on WhatsApp.</li>
+          <li>Authenticate you via one-time codes sent to your email or on WhatsApp.</li>
           <li>Run groups, matches, RSVPs, standby lists, and optional team lineups.</li>
           <li>Let hosts verify UPI prepayments and manage participants.</li>
           <li>Protect the service (e.g. reCAPTCHA on OTP requests to reduce abuse).</li>
@@ -68,8 +69,8 @@ export default function PrivacyPage() {
         <h2 className="text-lg font-semibold text-gray-900">Who can see your data</h2>
         <p className="text-sm leading-relaxed text-gray-600">
           Other members of a cricket group can see information needed to coordinate — for example
-          your name, phone number (on join requests and member lists for hosts), and match
-          participation status. We do not make your profile public on the open internet.
+          your name, phone number when available (on join requests and member lists for hosts), and
+          match participation status. We do not make your profile public on the open internet.
         </p>
       </section>
 
@@ -82,7 +83,7 @@ export default function PrivacyPage() {
         <ul className="list-disc space-y-2 pl-5 text-sm leading-relaxed text-gray-600">
           <li>
             <span className="font-medium text-gray-800">Supabase</span> — authentication, database,
-            and session storage.
+            session storage, and delivery of email sign-in codes.
           </li>
           <li>
             <span className="font-medium text-gray-800">MSG91</span> — delivery of WhatsApp

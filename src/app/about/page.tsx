@@ -75,10 +75,10 @@ export default async function AboutPage() {
       </section>
 
       <section className="mt-8 space-y-3">
-        <h2 className="text-lg font-semibold text-gray-900">Sign in with your phone</h2>
+        <h2 className="text-lg font-semibold text-gray-900">Sign in with email or WhatsApp</h2>
         <p className="text-sm leading-relaxed text-gray-600">
-          Sign up or sign in with a one-time code sent by SMS or WhatsApp — no passwords. New numbers
-          create an account automatically when you sign up.
+          Sign up or sign in with a one-time code sent to your email or on WhatsApp — no passwords. A
+          new email or phone number creates an account automatically when you sign up.
         </p>
       </section>
 
@@ -86,8 +86,9 @@ export default async function AboutPage() {
         <h2 className="text-lg font-semibold text-gray-900">Groups &amp; WhatsApp</h2>
         <p className="text-sm leading-relaxed text-gray-600">
           Most groups are tied to a WhatsApp chat, but the link is optional. Join requests show the
-          player&apos;s phone number and are approved by the host — we don&apos;t verify WhatsApp
-          membership automatically, so hosts should only approve people they know from the group.
+          player&apos;s phone number (when available) and are approved by the host — we don&apos;t
+          verify WhatsApp membership automatically, so hosts should only approve people they know
+          from the group.
           After approve or deny, hosts can optionally notify the player on WhatsApp. Hosts and
           co-hosts can edit group details, review members, and remove someone from the group if
           needed.
