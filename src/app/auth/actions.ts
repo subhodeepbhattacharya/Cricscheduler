@@ -29,14 +29,12 @@ export async function sendOtp(formData: FormData): Promise<SendOtpResult> {
   const normalized = normalizePhone(formData.get("phone") as string);
   if (!normalized.ok) return { ok: false, error: normalized.error };
 
-  // In production we always request the "sms" channel so Supabase fires the
-  // Send SMS Hook. The hook's Edge Function delivers the code over WhatsApp via
-  // MSG91 — the user-facing copy says WhatsApp, but Supabase's channel must be
-  // "sms" for the hook to trigger (the "whatsapp" channel bypasses the hook).
-  const channel: Channel =
-    process.env.NODE_ENV === "production" || formData.get("channel") === "sms"
-      ? "sms"
-      : "whatsapp";
+  // WhatsApp OTP is delivered via the MSG91 Send SMS Hook, which only fires for
+  // Supabase's "sms" channel (the "whatsapp" channel would bypass the hook and
+  // use Supabase's native provider). So we always request "sms" — in every
+  // environment — and the hook's Edge Function delivers the code over WhatsApp.
+  // The user-facing copy still says WhatsApp because that's the real channel.
+  const channel: Channel = "sms";
   const name = ((formData.get("name") as string) || "").trim();
 
   const supabase = await createClient();

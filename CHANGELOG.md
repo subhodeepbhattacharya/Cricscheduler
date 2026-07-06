@@ -3,6 +3,11 @@
 All notable changes to this project are recorded here, newest first.
 Timestamps are in IST (UTC+5:30).
 
+## 2026-07-06 — WhatsApp OTP live (email + WhatsApp in all environments)
+- Enabled **WhatsApp OTP in production** alongside email (`{ email: true, phone: "whatsapp" }` in `src/app/auth/page.tsx`) now that Meta Business verification and the MSG91 authentication template are live.
+- `sendOtp` now always requests Supabase's `sms` channel (every environment) so the MSG91 Send SMS Hook fires consistently; the `whatsapp` channel would bypass the hook. Delivery is still WhatsApp via MSG91.
+- Hardened the `sms-hook` Edge Function: downstream MSG91 failures return HTTP 500 (not MSG91's status) so a provider error no longer surfaces as the misleading "Hook requires authorization token" in Supabase Auth; the real MSG91 status is kept in the log message.
+
 ## 2026-07-04 — Email OTP sign-up and sign-in
 - Added **email one-time-code** auth alongside phone: `sendEmailOtp` / `verifyEmailOtp` use Supabase's native `signInWithOtp({ email })` + `verifyOtp({ type: "email" })`, reusing the existing "enter your code" screen.
 - The sign-in form now has an **Email / Phone** toggle when both are enabled. Methods are environment-driven: **production is email-only** (WhatsApp hidden until Meta Business verification / MSG91 are live); development shows Email + Phone (SMS/WhatsApp) for testing.

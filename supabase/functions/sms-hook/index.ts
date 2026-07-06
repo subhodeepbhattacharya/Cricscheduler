@@ -117,7 +117,11 @@ Deno.serve(async (req) => {
 
     if (msg91Failed) {
       console.error("[sms-hook] MSG91 WhatsApp error", response.status, body);
-      return jsonError(response.status || 502, `MSG91 WhatsApp send failed: ${body}`);
+      // Always return 500 for a downstream provider failure. Echoing MSG91's
+      // status (e.g. 401) makes GoTrue report "Hook requires authorization
+      // token", which misleadingly implies a hook-config problem. Keep MSG91's
+      // real status in the message for debugging.
+      return jsonError(500, `MSG91 WhatsApp send failed (HTTP ${response.status}): ${body}`);
     }
 
     return new Response(JSON.stringify({}), {
