@@ -94,6 +94,23 @@ export default async function GroupDetailPage({
     );
   }
 
+  const creatorIds = [...new Set(matchList.map((m) => m.created_by_user_id))];
+  let creatorNames: Record<string, string> = {};
+  if (creatorIds.length > 0) {
+    const { data: creators } = await supabase
+      .from("users")
+      .select("id, name")
+      .in("id", creatorIds);
+
+    creatorNames = (creators ?? []).reduce(
+      (acc, u) => {
+        acc[u.id] = u.name;
+        return acc;
+      },
+      {} as Record<string, string>
+    );
+  }
+
   return (
     <div>
       <Link href="/groups" className="text-sm text-green-700 hover:underline">
@@ -175,12 +192,17 @@ export default async function GroupDetailPage({
         <UpcomingMatchesByDate
           matches={upcomingMatches}
           confirmedCounts={confirmedCounts}
+          creatorNames={creatorNames}
           canManage={canManage}
           userId={user.id}
         />
       )}
 
-      <PastMatchesSection matches={pastMatches} confirmedCounts={confirmedCounts} />
+      <PastMatchesSection
+        matches={pastMatches}
+        confirmedCounts={confirmedCounts}
+        creatorNames={creatorNames}
+      />
     </div>
   );
 }

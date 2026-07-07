@@ -3,6 +3,9 @@
 All notable changes to this project are recorded here, newest first.
 Timestamps are in IST (UTC+5:30).
 
+## 2026-07-07 — Show match creator on group match cards
+- Upcoming and past match cards on the group page now show **Created by {name}**; upcoming cards use the same green (`text-green-700`) as the match time.
+
 ## 2026-07-07 — Require real name after sign-in (no more default "Player")
 - New users who sign in without a name are redirected to `/auth/profile` after OTP verification; groups and matches stay blocked until a valid name is saved.
 - Sign up enforces name (2+ characters) on client and server; existing placeholder names (`Player`, etc.) are prompted to update on next visit.

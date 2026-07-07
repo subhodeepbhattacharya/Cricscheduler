@@ -10,9 +10,10 @@ import type { Match } from "@/lib/types/database";
 type Props = {
   matches: Match[];
   confirmedCounts: Record<string, number>;
+  creatorNames: Record<string, string>;
 };
 
-export function PastMatchesSection({ matches, confirmedCounts }: Props) {
+export function PastMatchesSection({ matches, confirmedCounts, creatorNames }: Props) {
   const [expanded, setExpanded] = useState(false);
 
   if (matches.length === 0) return null;
@@ -51,6 +52,9 @@ export function PastMatchesSection({ matches, confirmedCounts }: Props) {
                       {formatDate(match.date)} · {formatMatchTime(match.start_time, match.end_time)}
                     </CardDescription>
                     <CardDescription>{match.location_name}</CardDescription>
+                    <CardDescription>
+                      Created by {creatorNames[match.created_by_user_id] ?? "Unknown"}
+                    </CardDescription>
                   </div>
                   <div className="text-right">
                     <Badge variant={match.status === "CANCELLED" ? "cancelled" : "completed"}>

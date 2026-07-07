@@ -12,6 +12,7 @@ import type { Match } from "@/lib/types/database";
 type Props = {
   matches: Match[];
   confirmedCounts: Record<string, number>;
+  creatorNames: Record<string, string>;
   canManage: boolean;
   userId: string;
 };
@@ -29,7 +30,13 @@ function groupByDate(matches: Match[]): { date: string; matches: Match[] }[] {
   }));
 }
 
-export function UpcomingMatchesByDate({ matches, confirmedCounts, canManage, userId }: Props) {
+export function UpcomingMatchesByDate({
+  matches,
+  confirmedCounts,
+  creatorNames,
+  canManage,
+  userId,
+}: Props) {
   const dateGroups = groupByDate(matches);
   const [expandedDate, setExpandedDate] = useState<string | null>(
     dateGroups[0]?.date ?? null
@@ -85,6 +92,9 @@ export function UpcomingMatchesByDate({ matches, confirmedCounts, canManage, use
                             </p>
                             <CardTitle className="mt-1">{match.title}</CardTitle>
                             <CardDescription>{match.location_name}</CardDescription>
+                            <CardDescription className="text-green-700">
+                              Created by {creatorNames[match.created_by_user_id] ?? "Unknown"}
+                            </CardDescription>
                           </div>
                           <div className="shrink-0 text-right">
                             <Badge variant={isFull ? "standby" : "confirmed"}>
