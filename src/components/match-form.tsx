@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { createMatch } from "@/app/groups/actions";
 import { updateMatch } from "@/app/matches/actions";
 import { Button } from "@/components/ui/button";
@@ -68,7 +68,9 @@ export function MatchForm({ mode, groupId, match }: MatchFormProps) {
       ? Math.ceil((totalNum / playersNum) * 100) / 100
       : 0;
 
-  async function handleSubmit(formData: FormData) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
     if (!locationName.trim() || !locationAddress.trim()) {
       setError("Please select a location from Google Maps or enter the address manually.");
       return;
@@ -118,7 +120,7 @@ export function MatchForm({ mode, groupId, match }: MatchFormProps) {
   }
 
   return (
-    <form action={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <Input
         label="Match title"
         name="title"

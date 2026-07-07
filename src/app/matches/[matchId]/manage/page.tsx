@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { requireAuth } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { isHostOrCoHost, getConfirmedCount } from "@/lib/match-logic";
+import { canManageMatch, getConfirmedCount, getMatchAddCandidates } from "@/lib/match-logic";
+import { AddMatchPlayer } from "@/components/add-match-player";
 import { formatDate, formatTime } from "@/lib/utils";
 import { ManageParticipants } from "@/components/manage-participants";
 import { TeamAssignment } from "@/components/team-assignment";
@@ -20,8 +21,16 @@ export default async function ManageMatchPage({
   const { data: match } = await supabase.from("matches").select("*").eq("id", matchId).single();
   if (!match) notFound();
 
-  const canManage = await isHostOrCoHost(match.group_id, user.id);
+  const canManage = await canManageMatch(match, user.id);
   if (!canManage) redirect(`/matches/${matchId}`);
+
+  let addCandidates: Awaited<ReturnType<typeof getMatchAddCandidates>> = {
+    candidates: [],
+    addPlayerReady: true,
+  };
+  if (match.status === "SCHEDULED") {
+    addCandidates = await getMatchAddCandidates(matchId, match.group_id);
+  }
 
   const confirmedCount = await getConfirmedCount(matchId);
 
@@ -87,11 +96,24 @@ export default async function ManageMatchPage({
           teamBName={match.team_b_name ?? null}
           confirmed={participants.filter((p) => p.status === "CONFIRMED")}
         />
-        <ManageParticipants
-          matchId={matchId}
-          prepaymentRequired={match.prepayment_required}
-          participants={participants}
-        />
+
+        <section>
+          <h2 className="mb-3 text-lg font-semibold text-gray-900">Participants</h2>
+          <div className="space-y-4">
+            {match.status === "SCHEDULED" && (
+              <AddMatchPlayer
+                matchId={matchId}
+                candidates={addCandidates.candidates}
+                addPlayerReady={addCandidates.addPlayerReady}
+              />
+            )}
+            <ManageParticipants
+              matchId={matchId}
+              prepaymentRequired={match.prepayment_required}
+              participants={participants}
+            />
+          </div>
+        </section>
       </div>
     </div>
   );

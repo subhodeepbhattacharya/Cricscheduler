@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { createGroup, updateGroup } from "@/app/groups/actions";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
@@ -14,10 +14,12 @@ export function GroupForm({ mode, group }: GroupFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(formData: FormData) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
     setLoading(true);
     setError(null);
 
+    const formData = new FormData(e.currentTarget);
     const result =
       mode === "create" ? await createGroup(formData) : await updateGroup(group.id, formData);
 
@@ -28,7 +30,7 @@ export function GroupForm({ mode, group }: GroupFormProps) {
   }
 
   return (
-    <form action={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <Input
         label="Group name"
         name="name"

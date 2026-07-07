@@ -8,7 +8,6 @@ import {
   isActiveMember,
   getConfirmedCount,
   promoteEarliestStandby,
-  isHostOrCoHost,
   canManageMatch,
 } from "@/lib/match-logic";
 
@@ -160,10 +159,10 @@ export async function updatePaymentStatus(
   const user = await requireAuth();
   const supabase = await createClient();
 
-  const { data: match } = await supabase.from("matches").select("group_id").eq("id", matchId).single();
+  const { data: match } = await supabase.from("matches").select("group_id, created_by_user_id").eq("id", matchId).single();
   if (!match) return { error: "Match not found" };
 
-  const allowed = await isHostOrCoHost(match.group_id, user.id);
+  const allowed = await canManageMatch(match, user.id);
   if (!allowed) return { error: "Not authorized" };
 
   const { data: payment } = await supabase
@@ -216,7 +215,7 @@ export async function promoteStandby(participationId: string, matchId: string) {
   const { data: match } = await supabase.from("matches").select("*").eq("id", matchId).single();
   if (!match) return { error: "Match not found" };
 
-  const allowed = await isHostOrCoHost(match.group_id, user.id);
+  const allowed = await canManageMatch(match, user.id);
   if (!allowed) return { error: "Not authorized" };
 
   const confirmedCount = await getConfirmedCount(matchId);
@@ -238,10 +237,10 @@ export async function markDroppedOut(participationId: string, matchId: string) {
   const user = await requireAuth();
   const supabase = await createClient();
 
-  const { data: match } = await supabase.from("matches").select("group_id").eq("id", matchId).single();
+  const { data: match } = await supabase.from("matches").select("group_id, created_by_user_id").eq("id", matchId).single();
   if (!match) return { error: "Match not found" };
 
-  const allowed = await isHostOrCoHost(match.group_id, user.id);
+  const allowed = await canManageMatch(match, user.id);
   if (!allowed) return { error: "Not authorized" };
 
   const { data: participation } = await supabase
@@ -280,7 +279,7 @@ export async function assignParticipantTeam(
     return { error: "Teams can only be assigned for scheduled matches" };
   }
 
-  const allowed = await isHostOrCoHost(match.group_id, user.id);
+  const allowed = await canManageMatch(match, user.id);
   if (!allowed) return { error: "Not authorized" };
 
   const { data: participation } = await supabase
@@ -323,7 +322,7 @@ export async function updateMatchTeamNames(
     return { error: "Team names can only be changed for scheduled matches" };
   }
 
-  const allowed = await isHostOrCoHost(match.group_id, user.id);
+  const allowed = await canManageMatch(match, user.id);
   if (!allowed) return { error: "Not authorized" };
 
   function normalize(name: string): { ok: true; value: string | null } | { ok: false; error: string } {
@@ -379,7 +378,39 @@ async function getMatchForManagement(matchId: string, userId: string) {
   const allowed = await canManageMatch(match, userId);
   if (!allowed) return { error: "You do not have permission to manage this match." as const };
 
-  return { match };
+  return { match, supabase };
+}
+
+export async function addParticipantToMatch(matchId: string, userId: string) {
+  const user = await requireAuth();
+  const result = await getMatchForManagement(matchId, user.id);
+  if ("error" in result) return { error: result.error };
+
+  const { match, supabase } = result;
+  if (match.status !== "SCHEDULED") {
+    return { error: "Only scheduled matches accept new players." };
+  }
+
+  const { data: status, error } = await supabase.rpc("add_participant_to_match", {
+    p_match_id: matchId,
+    p_user_id: userId,
+  });
+
+  if (error) {
+    const rpcMissing =
+      error.code === "PGRST202" || error.message.includes("add_participant_to_match");
+    if (rpcMissing) {
+      return {
+        error:
+          "Add player is not available yet. Run supabase/migrations/023_add_participant_rpc.sql in the Supabase SQL Editor.",
+      };
+    }
+    return { error: error.message };
+  }
+
+  revalidatePath(`/matches/${matchId}/manage`);
+  revalidatePath(`/matches/${matchId}`);
+  return { success: true, status: status as ParticipationStatus };
 }
 
 function parseMatchFormData(formData: FormData) {

@@ -3,6 +3,13 @@
 All notable changes to this project are recorded here, newest first.
 Timestamps are in IST (UTC+5:30).
 
+## 2026-07-07 — Fix add-player RPC insert bug
+- Fixed `add_participant_to_match`: PostgreSQL `FOUND` stayed true after `COUNT(*)`, so new players hit `UPDATE` instead of `INSERT` and never appeared. Use migration `024_fix_add_participant_insert.sql` if `023` was already applied.
+
+## 2026-07-07 — Add players to a match from the manage page
+- Host, co-host, or **match creator** can add group members who have not RSVP'd from **Manage match** (`/matches/{id}/manage`). New players are confirmed directly when spots remain, otherwise added to standby (Option A for prepayment — no UPI payment row required).
+- Migration `023_add_participant_rpc.sql`: `add_participant_to_match`, `get_match_add_candidates`, and RLS updates so creators can manage participations and payments on their matches.
+
 ## 2026-07-07 — Copy match link for group members
 - Scheduled match pages now include a **Share match link** card that copies `https://…/matches/{id}` for WhatsApp sharing. Works for signed-in group members who already have access to the match.
 
