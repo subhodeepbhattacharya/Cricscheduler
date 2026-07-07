@@ -5,6 +5,12 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { verifyRecaptcha } from "@/lib/recaptcha";
 import { normalizePhone } from "@/lib/phone";
+import { getUserProfile, requireAuth } from "@/lib/auth";
+import {
+  isValidProfileName,
+  needsProfileName,
+  normalizeProfileName,
+} from "@/lib/profile-name";
 
 type Channel = "whatsapp" | "sms";
 
@@ -13,6 +19,79 @@ function safeNext(formData: FormData): string {
   // Only allow same-site relative paths to avoid open redirects.
   if (next.startsWith("/") && !next.startsWith("//")) return next;
   return "/groups";
+}
+
+function authMode(formData: FormData): "signin" | "signup" {
+  return formData.get("mode") === "signup" ? "signup" : "signin";
+}
+
+function validateSignupName(formData: FormData): string | null {
+  if (authMode(formData) !== "signup") return null;
+  const name = normalizeProfileName(formData.get("name") as string);
+  if (!isValidProfileName(name)) {
+    return "Please enter your name (at least 2 characters).";
+  }
+  return null;
+}
+
+function normalizeAuthPhone(user: { phone?: string | null }): string | null {
+  if (!user.phone) return null;
+  return user.phone.startsWith("+") ? user.phone : `+${user.phone}`;
+}
+
+async function redirectAfterAuth(formData: FormData) {
+  revalidatePath("/", "layout");
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/auth");
+
+  const next = safeNext(formData);
+  const profile = await getUserProfile(user.id);
+  if (needsProfileName(profile?.name, user)) {
+    redirect(`/auth/profile?next=${encodeURIComponent(next)}`);
+  }
+
+  redirect(next);
+}
+
+export async function setProfileName(formData: FormData) {
+  const user = await requireAuth({ allowIncompleteProfile: true });
+  const name = normalizeProfileName(formData.get("name") as string);
+
+  if (!isValidProfileName(name)) {
+    return { error: "Enter your real name (at least 2 characters)." };
+  }
+
+  const supabase = await createClient();
+  const phone = normalizeAuthPhone(user);
+
+  const { data: existing } = await supabase
+    .from("users")
+    .select("id")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (existing) {
+    const { error } = await supabase.from("users").update({ name }).eq("id", user.id);
+    if (error) return { error: error.message };
+  } else {
+    const { error } = await supabase.from("users").insert({
+      id: user.id,
+      name,
+      email: user.email ?? null,
+      phone,
+    });
+    if (error) return { error: error.message };
+  }
+
+  const { error: metaError } = await supabase.auth.updateUser({ data: { name } });
+  if (metaError) return { error: metaError.message };
+
+  revalidatePath("/", "layout");
+  redirect(safeNext(formData));
 }
 
 type SendOtpResult =
@@ -35,7 +114,10 @@ export async function sendOtp(formData: FormData): Promise<SendOtpResult> {
   // environment — and the hook's Edge Function delivers the code over WhatsApp.
   // The user-facing copy still says WhatsApp because that's the real channel.
   const channel: Channel = "sms";
-  const name = ((formData.get("name") as string) || "").trim();
+  const nameError = validateSignupName(formData);
+  if (nameError) return { ok: false, error: nameError };
+
+  const name = normalizeProfileName(formData.get("name") as string);
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithOtp({
@@ -76,8 +158,7 @@ export async function verifyPhoneOtp(formData: FormData) {
 
   if (error) return { error: error.message };
 
-  revalidatePath("/", "layout");
-  redirect(safeNext(formData));
+  await redirectAfterAuth(formData);
 }
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -101,7 +182,10 @@ export async function sendEmailOtp(formData: FormData): Promise<SendEmailOtpResu
   const email = normalizeEmail(formData.get("email") as string);
   if (!email) return { ok: false, error: "Enter a valid email address." };
 
-  const name = ((formData.get("name") as string) || "").trim();
+  const nameError = validateSignupName(formData);
+  if (nameError) return { ok: false, error: nameError };
+
+  const name = normalizeProfileName(formData.get("name") as string);
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithOtp({
@@ -140,8 +224,7 @@ export async function verifyEmailOtp(formData: FormData) {
 
   if (error) return { error: error.message };
 
-  revalidatePath("/", "layout");
-  redirect(safeNext(formData));
+  await redirectAfterAuth(formData);
 }
 
 export async function signOut() {

@@ -10,7 +10,15 @@ function getSupabaseKey() {
 }
 
 export async function updateSession(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request });
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set(
+    "x-url",
+    request.nextUrl.pathname + request.nextUrl.search
+  );
+
+  let supabaseResponse = NextResponse.next({
+    request: { headers: requestHeaders },
+  });
   const host = request.headers.get("host") ?? "";
 
   const supabase = createServerClient(
@@ -24,7 +32,9 @@ export async function updateSession(request: NextRequest) {
         },
         setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-          supabaseResponse = NextResponse.next({ request });
+          supabaseResponse = NextResponse.next({
+            request: { headers: requestHeaders },
+          });
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options)
           );

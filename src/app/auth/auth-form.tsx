@@ -5,6 +5,7 @@ import { sendOtp, verifyPhoneOtp, sendEmailOtp, verifyEmailOtp } from "./actions
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { executeRecaptcha } from "@/lib/recaptcha-client";
+import { isValidProfileName, normalizeProfileName } from "@/lib/profile-name";
 
 /**
  * Phone delivery options:
@@ -55,8 +56,10 @@ export function AuthForm({
   const [loading, setLoading] = useState(false);
 
   function requireName(): boolean {
-    if (mode === "signup" && !name.trim()) {
-      setError("Please enter your name to create an account.");
+    if (mode !== "signup") return true;
+    const trimmed = normalizeProfileName(name);
+    if (!isValidProfileName(trimmed)) {
+      setError("Please enter your name (at least 2 characters).");
       return false;
     }
     return true;
@@ -71,6 +74,7 @@ export function AuthForm({
     const token = await executeRecaptcha("send_otp");
     const fd = new FormData();
     fd.set("phone", phone);
+    fd.set("mode", mode);
     if (mode === "signup" && name.trim()) fd.set("name", name.trim());
     fd.set("channel", "whatsapp");
     if (token) fd.set("recaptchaToken", token);
@@ -99,6 +103,7 @@ export function AuthForm({
     const token = await executeRecaptcha("send_otp");
     const fd = new FormData();
     fd.set("email", email);
+    fd.set("mode", mode);
     if (mode === "signup" && name.trim()) fd.set("name", name.trim());
     if (token) fd.set("recaptchaToken", token);
     if (next) fd.set("next", next);
@@ -269,7 +274,10 @@ export function AuthForm({
             name="name"
             type="text"
             required
+            autoComplete="name"
             placeholder="Your name"
+            minLength={2}
+            maxLength={80}
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
@@ -341,7 +349,7 @@ export function AuthForm({
       <p className="mt-3 text-center text-xs text-gray-400">
         {mode === "signup"
           ? "We'll send a one-time code to create your account."
-          : "We'll send a one-time code to sign in to your account."}
+          : "We'll send a one-time code to sign in. First time? Use Sign up and add your name, or you'll be asked after verifying."}
       </p>
     </div>
   );

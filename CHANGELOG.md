@@ -3,6 +3,11 @@
 All notable changes to this project are recorded here, newest first.
 Timestamps are in IST (UTC+5:30).
 
+## 2026-07-07 — Require real name after sign-in (no more default "Player")
+- New users who sign in without a name are redirected to `/auth/profile` after OTP verification; groups and matches stay blocked until a valid name is saved.
+- Sign up enforces name (2+ characters) on client and server; existing placeholder names (`Player`, etc.) are prompted to update on next visit.
+- Migration `025_signup_name_placeholder.sql` stops the auth signup trigger from defaulting new accounts to `"Player"`.
+
 ## 2026-07-07 — Fix add-player RPC insert bug
 - Fixed `add_participant_to_match`: PostgreSQL `FOUND` stayed true after `COUNT(*)`, so new players hit `UPDATE` instead of `INSERT` and never appeared. Use migration `024_fix_add_participant_insert.sql` if `023` was already applied.
 

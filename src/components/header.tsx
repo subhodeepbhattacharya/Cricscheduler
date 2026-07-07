@@ -1,16 +1,17 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getUserProfile } from "@/lib/auth";
+import { isValidProfileName, normalizeProfileName } from "@/lib/profile-name";
 
 function displayName(
   profile: { name: string } | null,
   user: { user_metadata?: { name?: string } }
-): string {
-  const fromProfile = profile?.name?.trim();
-  if (fromProfile) return fromProfile;
-  const fromMeta = (user.user_metadata?.name as string | undefined)?.trim();
-  if (fromMeta) return fromMeta;
-  return "Player";
+): string | null {
+  const fromProfile = normalizeProfileName(profile?.name);
+  if (isValidProfileName(fromProfile)) return fromProfile;
+  const fromMeta = normalizeProfileName(user.user_metadata?.name as string | undefined);
+  if (isValidProfileName(fromMeta)) return fromMeta;
+  return null;
 }
 
 export async function Header() {

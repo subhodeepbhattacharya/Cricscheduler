@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, getUserProfile } from "@/lib/auth";
+import { needsProfileName } from "@/lib/profile-name";
 import { AuthForm } from "./auth-form";
 
 export default async function AuthPage({
@@ -12,7 +13,16 @@ export default async function AuthPage({
   const initialMode = mode === "signup" ? "signup" : "signin";
 
   const user = await getCurrentUser();
-  if (user) redirect(safeNext ?? "/groups");
+  if (user) {
+    const profile = await getUserProfile(user.id);
+    if (needsProfileName(profile?.name, user)) {
+      const profileNext = safeNext
+        ? `/auth/profile?next=${encodeURIComponent(safeNext)}`
+        : "/auth/profile";
+      redirect(profileNext);
+    }
+    redirect(safeNext ?? "/groups");
+  }
 
   return (
     <div>

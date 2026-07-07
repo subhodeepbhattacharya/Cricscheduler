@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { getLocalTodayDateString, normalizeUpiVpa, isValidUpiVpa } from "@/lib/utils";
 import { isHostOrCoHost, isActiveMember } from "@/lib/match-logic";
+import { normalizeProfileName } from "@/lib/profile-name";
 
 async function ensureUserProfile(user: {
   id: string;
@@ -24,9 +25,10 @@ async function ensureUserProfile(user: {
     .single();
 
   if (!profile) {
+    const profileName = normalizeProfileName(user.user_metadata?.name);
     const { error } = await supabase.from("users").insert({
       id: user.id,
-      name: user.user_metadata?.name ?? "Player",
+      name: profileName || "Player",
       phone,
       email: user.email ?? null,
     });
