@@ -3,6 +3,9 @@
 All notable changes to this project are recorded here, newest first.
 Timestamps are in IST (UTC+5:30).
 
+## 2026-07-07 — Refresh About page for recent features
+- Updated `/about` for co-host promotion, per-match UPI, share match link, manual add-player, match creator on cards, and required profile names.
+
 ## 2026-07-07 — Promote players to co-host (max 5 hosts + co-hosts)
 - Group **host** can promote active players to **co-host** from the Members list, or remove the co-host role. Combined hosts and co-hosts are capped at **5** per group.
 - Migration `026_group_cohost_promotion.sql`: `promote_member_to_cohost`, `demote_cohost_to_player`, `is_group_host`.
