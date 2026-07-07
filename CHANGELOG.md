@@ -3,6 +3,9 @@
 All notable changes to this project are recorded here, newest first.
 Timestamps are in IST (UTC+5:30).
 
+## 2026-07-07 — Rebrand legal pages to OneEightAI Labs
+- Privacy, Terms, About, and LICENSE now reference **OneEightAI Labs** as the operator and copyright holder (replacing personal name).
+
 ## 2026-07-07 — Show match creator on group match cards
 - Upcoming and past match cards on the group page now show **Created by {name}**; upcoming cards use the same green (`text-green-700`) as the match time.
 

@@ -18,7 +18,7 @@ export default function TermsPage() {
         <p className="mt-2 text-sm text-gray-500">Last updated: July 2026</p>
         <p className="mt-3 text-sm leading-relaxed text-gray-600">
           These terms govern your use of CricScheduler (&quot;the Service&quot;), operated by
-          Subhodeep B. By creating an account or using the Service, you agree to these terms. If you
+          OneEightAI Labs. By creating an account or using the Service, you agree to these terms. If you
           do not agree, do not use the Service.
         </p>
       </div>
@@ -88,7 +88,7 @@ export default function TermsPage() {
         <h2 className="text-lg font-semibold text-gray-900">Intellectual property</h2>
         <p className="text-sm leading-relaxed text-gray-600">
           CricScheduler, including its software, design, and branding, is proprietary and owned by
-          Subhodeep B. These terms do not grant you any right to use our code or trademarks except
+          OneEightAI Labs. These terms do not grant you any right to use our code or trademarks except
           as needed to use the Service. The software is not open source.
         </p>
       </section>
@@ -105,7 +105,7 @@ export default function TermsPage() {
       <section className="mt-8 space-y-3">
         <h2 className="text-lg font-semibold text-gray-900">Limitation of liability</h2>
         <p className="text-sm leading-relaxed text-gray-600">
-          To the fullest extent permitted by law, Subhodeep B and CricScheduler will not be liable
+          To the fullest extent permitted by law, OneEightAI Labs and CricScheduler will not be liable
           for indirect, incidental, special, or consequential damages, or for lost profits, data, or
           goodwill, arising from your use of the Service — including missed matches, payment
           disputes, injuries at cricket games, or actions of other users or hosts. Our total

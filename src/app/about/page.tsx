@@ -23,6 +23,9 @@ export default async function AboutPage() {
         <p className="mt-2 text-sm text-gray-600">
           A mobile-first app for amateur cricket groups who coordinate on WhatsApp.
         </p>
+        <p className="mt-2 text-sm text-gray-500">
+          Built and operated by OneEightAI Labs.
+        </p>
       </div>
 
       <section className="mt-8 space-y-3">

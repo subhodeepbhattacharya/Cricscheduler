@@ -17,7 +17,7 @@ export default function PrivacyPage() {
         <h1 className="text-2xl font-bold text-gray-900">Privacy Policy</h1>
         <p className="mt-2 text-sm text-gray-500">Last updated: July 2026</p>
         <p className="mt-3 text-sm leading-relaxed text-gray-600">
-          CricScheduler (&quot;we&quot;, &quot;us&quot;) is operated by Subhodeep B. This policy
+          CricScheduler (&quot;we&quot;, &quot;us&quot;) is operated by OneEightAI Labs. This policy
           explains what personal data we collect when you use the CricScheduler web app, why we
           collect it, and how we handle it. We do not sell your personal data.
         </p>
