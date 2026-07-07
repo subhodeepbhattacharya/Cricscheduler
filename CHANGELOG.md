@@ -3,6 +3,10 @@
 All notable changes to this project are recorded here, newest first.
 Timestamps are in IST (UTC+5:30).
 
+## 2026-07-07 — Promote players to co-host (max 5 hosts + co-hosts)
+- Group **host** can promote active players to **co-host** from the Members list, or remove the co-host role. Combined hosts and co-hosts are capped at **5** per group.
+- Migration `026_group_cohost_promotion.sql`: `promote_member_to_cohost`, `demote_cohost_to_player`, `is_group_host`.
+
 ## 2026-07-07 — Rebrand legal pages to OneEightAI Labs
 - Privacy, Terms, About, and LICENSE now reference **OneEightAI Labs** as the operator and copyright holder (replacing personal name).
 

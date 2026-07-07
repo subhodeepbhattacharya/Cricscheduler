@@ -1,0 +1,1 @@
+export const MAX_GROUP_HOSTS_AND_COHOSTS = 5;

@@ -30,6 +30,7 @@ export default async function GroupDetailPage({
   const canManage = await isHostOrCoHost(groupId, user.id);
   const canCreateMatch = await isActiveMember(groupId, user.id);
   const role = await getUserGroupRole(groupId, user.id);
+  const canManageCoHosts = role === "HOST";
   const canDeleteGroup = role === "HOST" || group.created_by_user_id === user.id;
 
   let pendingRequests: PendingRequest[] = [];
@@ -167,7 +168,15 @@ export default async function GroupDetailPage({
       )}
 
       {canManage && (
-        <GroupMembers groupId={group.id} members={groupMembers} currentUserId={user.id} />
+        <GroupMembers
+          groupId={group.id}
+          members={groupMembers}
+          currentUserId={user.id}
+          canManageCoHosts={canManageCoHosts}
+          leadershipCount={groupMembers.filter(
+            (m) => m.role === "HOST" || m.role === "CO_HOST"
+          ).length}
+        />
       )}
 
       <div className="mt-6 flex items-center justify-between">

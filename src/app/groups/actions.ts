@@ -312,3 +312,51 @@ export async function removeGroupMember(membershipId: string, groupId: string) {
   revalidatePath("/groups");
   return { success: true };
 }
+
+export async function promoteMemberToCoHost(membershipId: string, groupId: string) {
+  await requireAuth();
+  const supabase = await createClient();
+
+  const { error } = await supabase.rpc("promote_member_to_cohost", {
+    p_membership_id: membershipId,
+  });
+
+  if (error) {
+    const rpcMissing =
+      error.code === "PGRST202" || error.message.includes("promote_member_to_cohost");
+    if (rpcMissing) {
+      return {
+        error:
+          "Co-host promotion is not available yet. Run supabase/migrations/026_group_cohost_promotion.sql in the Supabase SQL Editor.",
+      };
+    }
+    return { error: error.message };
+  }
+
+  revalidatePath(`/groups/${groupId}`, "page");
+  return { success: true };
+}
+
+export async function demoteCoHostToPlayer(membershipId: string, groupId: string) {
+  await requireAuth();
+  const supabase = await createClient();
+
+  const { error } = await supabase.rpc("demote_cohost_to_player", {
+    p_membership_id: membershipId,
+  });
+
+  if (error) {
+    const rpcMissing =
+      error.code === "PGRST202" || error.message.includes("demote_cohost_to_player");
+    if (rpcMissing) {
+      return {
+        error:
+          "Co-host role changes are not available yet. Run supabase/migrations/026_group_cohost_promotion.sql in the Supabase SQL Editor.",
+      };
+    }
+    return { error: error.message };
+  }
+
+  revalidatePath(`/groups/${groupId}`, "page");
+  return { success: true };
+}

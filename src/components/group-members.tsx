@@ -2,10 +2,15 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { removeGroupMember } from "@/app/groups/actions";
+import {
+  removeGroupMember,
+  promoteMemberToCoHost,
+  demoteCoHostToPlayer,
+} from "@/app/groups/actions";
 import { Button } from "@/components/ui/button";
 import { Badge, formatStatus, statusLabel } from "@/components/ui/badge";
 import { formatPhone } from "@/lib/phone";
+import { MAX_GROUP_HOSTS_AND_COHOSTS } from "@/lib/group-limits";
 import type { MembershipRole } from "@/lib/types/database";
 
 export interface GroupMember {
@@ -26,16 +31,22 @@ export function GroupMembers({
   groupId,
   members,
   currentUserId,
+  canManageCoHosts,
+  leadershipCount,
 }: {
   groupId: string;
   members: GroupMember[];
   currentUserId: string;
+  canManageCoHosts: boolean;
+  leadershipCount: number;
 }) {
   const router = useRouter();
   const [expanded, setExpanded] = useState(false);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [confirmRemove, setConfirmRemove] = useState<ConfirmRemove | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const atLeadershipLimit = leadershipCount >= MAX_GROUP_HOSTS_AND_COHOSTS;
 
   if (members.length === 0) return null;
 
@@ -55,6 +66,34 @@ export function GroupMembers({
     router.refresh();
   }
 
+  async function handlePromote(membershipId: string) {
+    setPendingId(membershipId);
+    setError(null);
+
+    const result = await promoteMemberToCoHost(membershipId, groupId);
+
+    if (result?.error) {
+      setError(result.error);
+    }
+
+    setPendingId(null);
+    router.refresh();
+  }
+
+  async function handleDemote(membershipId: string) {
+    setPendingId(membershipId);
+    setError(null);
+
+    const result = await demoteCoHostToPlayer(membershipId, groupId);
+
+    if (result?.error) {
+      setError(result.error);
+    }
+
+    setPendingId(null);
+    router.refresh();
+  }
+
   return (
     <div className="mt-6 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
       <button
@@ -67,6 +106,12 @@ export function GroupMembers({
           <p className="font-semibold text-gray-900">Members</p>
           <p className="text-xs text-gray-500">
             {members.length} {members.length === 1 ? "member" : "members"}
+            {canManageCoHosts && (
+              <span>
+                {" "}
+                · {leadershipCount}/{MAX_GROUP_HOSTS_AND_COHOSTS} hosts &amp; co-hosts
+              </span>
+            )}
           </p>
         </div>
         <span
@@ -82,6 +127,13 @@ export function GroupMembers({
           <p className="mb-3 text-xs text-gray-500">
             Removing a member revokes their access. They can request to join again via the invite
             link.
+            {canManageCoHosts && (
+              <>
+                {" "}
+                As host, you can promote players to co-host (up to{" "}
+                {MAX_GROUP_HOSTS_AND_COHOSTS} hosts and co-hosts combined).
+              </>
+            )}
           </p>
 
           {error && <p className="mb-3 text-sm text-red-600">{error}</p>}
@@ -90,7 +142,11 @@ export function GroupMembers({
             {members.map((member) => {
               const isSelf = member.user_id === currentUserId;
               const canRemove = member.role !== "HOST" && !isSelf;
+              const canPromote =
+                canManageCoHosts && member.role === "PLAYER" && !atLeadershipLimit;
+              const canDemote = canManageCoHosts && member.role === "CO_HOST";
               const isConfirming = confirmRemove?.membershipId === member.membership_id;
+              const isPending = pendingId === member.membership_id;
 
               if (isConfirming) {
                 return (
@@ -111,7 +167,7 @@ export function GroupMembers({
                         size="sm"
                         variant="secondary"
                         onClick={() => setConfirmRemove(null)}
-                        disabled={pendingId === member.membership_id}
+                        disabled={isPending}
                       >
                         Cancel
                       </Button>
@@ -119,7 +175,7 @@ export function GroupMembers({
                         type="button"
                         size="sm"
                         variant="danger"
-                        loading={pendingId === member.membership_id}
+                        loading={isPending}
                         onClick={() => handleRemove(member.membership_id)}
                       >
                         Yes, remove member
@@ -148,22 +204,47 @@ export function GroupMembers({
                       {member.phone ? formatPhone(member.phone) : "Phone not available"}
                     </p>
                   </div>
-                  {canRemove && (
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="secondary"
-                      onClick={() =>
-                        setConfirmRemove({
-                          membershipId: member.membership_id,
-                          name: member.name,
-                        })
-                      }
-                      className="shrink-0 text-red-700 hover:text-red-800"
-                    >
-                      Remove
-                    </Button>
-                  )}
+                  <div className="flex shrink-0 flex-col items-end gap-1 sm:flex-row sm:items-center">
+                    {canPromote && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        loading={isPending}
+                        onClick={() => handlePromote(member.membership_id)}
+                      >
+                        Make co-host
+                      </Button>
+                    )}
+                    {canDemote && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        loading={isPending}
+                        onClick={() => handleDemote(member.membership_id)}
+                        className="text-gray-600"
+                      >
+                        Remove co-host
+                      </Button>
+                    )}
+                    {canRemove && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        onClick={() =>
+                          setConfirmRemove({
+                            membershipId: member.membership_id,
+                            name: member.name,
+                          })
+                        }
+                        className="text-red-700 hover:text-red-800"
+                      >
+                        Remove
+                      </Button>
+                    )}
+                  </div>
                 </div>
               );
             })}

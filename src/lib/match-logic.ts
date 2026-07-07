@@ -16,6 +16,11 @@ export async function getUserGroupRole(
   return data?.role ?? null;
 }
 
+export async function isGroupHost(groupId: string, userId: string): Promise<boolean> {
+  const role = await getUserGroupRole(groupId, userId);
+  return role === "HOST";
+}
+
 export async function isHostOrCoHost(groupId: string, userId: string): Promise<boolean> {
   const role = await getUserGroupRole(groupId, userId);
   return role === "HOST" || role === "CO_HOST";
