@@ -7,6 +7,7 @@ import { formatDate, formatMatchTime, formatCurrency, isMatchElapsed } from "@/l
 import { RsvpActions } from "@/components/rsvp-actions";
 import { MatchTeamsDisplay } from "@/components/match-teams-display";
 import { DeleteMatchButton } from "@/components/delete-match-button";
+import { MatchShareLink } from "@/components/match-share-link";
 import { buttonVariants } from "@/components/ui/button";
 import { Badge, statusLabel, formatStatus } from "@/components/ui/badge";
 import type { Match, MatchParticipation, Payment } from "@/lib/types/database";
@@ -175,6 +176,8 @@ export default async function MatchDetailPage({
           </div>
         </div>
       </div>
+
+      {typedMatch.status === "SCHEDULED" && <MatchShareLink matchId={matchId} />}
 
       {canManage && typedMatch.status === "SCHEDULED" && (
         <div className="mt-4 flex flex-wrap items-center gap-2">

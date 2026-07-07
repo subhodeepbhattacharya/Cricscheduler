@@ -3,6 +3,9 @@
 All notable changes to this project are recorded here, newest first.
 Timestamps are in IST (UTC+5:30).
 
+## 2026-07-07 — Copy match link for group members
+- Scheduled match pages now include a **Share match link** card that copies `https://…/matches/{id}` for WhatsApp sharing. Works for signed-in group members who already have access to the match.
+
 ## 2026-07-06 — Shared auth cookies for www/apex; cricket favicon
 - Auth session cookies on `cricscheduler.com` and `www.cricscheduler.com` now use `Domain=.cricscheduler.com` so sign-in on one host is recognized on the other (`src/lib/auth-cookies.ts`, wired through Supabase browser/server/middleware clients).
 - Added `src/app/icon.svg` (cricket bat and ball on green) as the browser tab favicon, matching the homepage emoji branding.
