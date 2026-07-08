@@ -3,6 +3,9 @@
 All notable changes to this project are recorded here, newest first.
 Timestamps are in IST (UTC+5:30).
 
+## 2026-07-08 22:05 IST — WhatsApp contact for match creator on group cards
+- **Created by {name}** on upcoming and past match cards is now a WhatsApp link when the creator has a phone on file (not shown for your own matches). Opens a pre-filled message about that match.
+
 ## 2026-07-08 15:19 IST — Remove WhatsApp link from match join gate
 - Non-members who open a shared match link no longer see an **Open the WhatsApp group** link on the join card, since WhatsApp is optional for groups.
 

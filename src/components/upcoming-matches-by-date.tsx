@@ -8,14 +8,16 @@ import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DeleteMatchButton } from "@/components/delete-match-button";
 import { MatchShareLink } from "@/components/match-share-link";
+import { MatchCreatorLink, type MatchCreatorInfo } from "@/components/match-creator-link";
 import type { Match } from "@/lib/types/database";
 
 type Props = {
   matches: Match[];
   confirmedCounts: Record<string, number>;
-  creatorNames: Record<string, string>;
+  creators: Record<string, MatchCreatorInfo>;
   canManage: boolean;
   userId: string;
+  userName?: string | null;
 };
 
 function groupByDate(matches: Match[]): { date: string; matches: Match[] }[] {
@@ -34,9 +36,10 @@ function groupByDate(matches: Match[]): { date: string; matches: Match[] }[] {
 export function UpcomingMatchesByDate({
   matches,
   confirmedCounts,
-  creatorNames,
+  creators,
   canManage,
   userId,
+  userName,
 }: Props) {
   const dateGroups = groupByDate(matches);
   const [expandedDate, setExpandedDate] = useState<string | null>(
@@ -85,28 +88,33 @@ export function UpcomingMatchesByDate({
 
                   return (
                     <Card key={match.id}>
-                      <Link href={`/matches/${match.id}`}>
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <Link href={`/matches/${match.id}`}>
                             <p className="text-lg font-semibold text-green-700">
                               {formatMatchTime(match.start_time, match.end_time)}
                             </p>
                             <CardTitle className="mt-1">{match.title}</CardTitle>
                             <CardDescription>{match.location_name}</CardDescription>
-                            <CardDescription className="text-green-700">
-                              Created by {creatorNames[match.created_by_user_id] ?? "Unknown"}
-                            </CardDescription>
-                          </div>
-                          <div className="shrink-0 text-right">
-                            <Badge variant={isFull ? "standby" : "confirmed"}>
-                              {confirmed} / {match.max_players}
-                            </Badge>
-                            <p className="mt-1 text-xs text-gray-500">
-                              {formatMatchFee(Number(match.fee_per_player))}
-                            </p>
-                          </div>
+                          </Link>
+                          <MatchCreatorLink
+                            creatorUserId={match.created_by_user_id}
+                            creator={creators[match.created_by_user_id]}
+                            matchTitle={match.title}
+                            matchDateLabel={formatDate(match.date)}
+                            currentUserId={userId}
+                            currentUserName={userName}
+                          />
                         </div>
-                      </Link>
+                        <Link href={`/matches/${match.id}`} className="shrink-0 text-right">
+                          <Badge variant={isFull ? "standby" : "confirmed"}>
+                            {confirmed} / {match.max_players}
+                          </Badge>
+                          <p className="mt-1 text-xs text-gray-500">
+                            {formatMatchFee(Number(match.fee_per_player))}
+                          </p>
+                        </Link>
+                      </div>
                       <div className="mt-3 space-y-3 border-t border-gray-100 pt-3">
                         {canEditMatch && (
                           <div className="flex items-center gap-2">

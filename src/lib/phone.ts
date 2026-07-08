@@ -53,3 +53,15 @@ export function buildWhatsAppNotifyUrl(
   if (digits.length < 8) return null;
   return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
 }
+
+export function buildMatchCreatorContactMessage(params: {
+  creatorName: string;
+  matchTitle: string;
+  matchDateLabel: string;
+  viewerName?: string | null;
+}): string {
+  const greeting = params.viewerName
+    ? `Hi ${params.creatorName}, this is ${params.viewerName}.`
+    : `Hi ${params.creatorName},`;
+  return `${greeting} I have a question about the match "${params.matchTitle}" (${params.matchDateLabel}) on CricScheduler.`;
+}

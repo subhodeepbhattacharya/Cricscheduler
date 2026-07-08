@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { requireAuth } from "@/lib/auth";
+import { requireAuth, getUserProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { isHostOrCoHost, getUserGroupRole, isActiveMember } from "@/lib/match-logic";
 import { isMatchElapsed, getMatchStartMs } from "@/lib/utils";
@@ -11,6 +11,7 @@ import { PendingRequests, type PendingRequest } from "@/components/pending-reque
 import { GroupMembers, type GroupMember } from "@/components/group-members";
 import { UpcomingMatchesByDate } from "@/components/upcoming-matches-by-date";
 import { PastMatchesSection } from "@/components/past-matches-section";
+import type { MatchCreatorInfo } from "@/components/match-creator-link";
 import type { Match } from "@/lib/types/database";
 
 export const dynamic = "force-dynamic";
@@ -23,6 +24,7 @@ export default async function GroupDetailPage({
   const user = await requireAuth();
   const { groupId } = await params;
   const supabase = await createClient();
+  const viewerProfile = await getUserProfile(user.id);
 
   const { data: group } = await supabase.from("cricket_groups").select("*").eq("id", groupId).single();
   if (!group) notFound();
@@ -96,19 +98,19 @@ export default async function GroupDetailPage({
   }
 
   const creatorIds = [...new Set(matchList.map((m) => m.created_by_user_id))];
-  let creatorNames: Record<string, string> = {};
+  let creators: Record<string, MatchCreatorInfo> = {};
   if (creatorIds.length > 0) {
-    const { data: creators } = await supabase
+    const { data: creatorRows } = await supabase
       .from("users")
-      .select("id, name")
+      .select("id, name, phone")
       .in("id", creatorIds);
 
-    creatorNames = (creators ?? []).reduce(
+    creators = (creatorRows ?? []).reduce(
       (acc, u) => {
-        acc[u.id] = u.name;
+        acc[u.id] = { name: u.name, phone: u.phone };
         return acc;
       },
-      {} as Record<string, string>
+      {} as Record<string, MatchCreatorInfo>
     );
   }
 
@@ -201,16 +203,19 @@ export default async function GroupDetailPage({
         <UpcomingMatchesByDate
           matches={upcomingMatches}
           confirmedCounts={confirmedCounts}
-          creatorNames={creatorNames}
+          creators={creators}
           canManage={canManage}
           userId={user.id}
+          userName={viewerProfile?.name ?? null}
         />
       )}
 
       <PastMatchesSection
         matches={pastMatches}
         confirmedCounts={confirmedCounts}
-        creatorNames={creatorNames}
+        creators={creators}
+        userId={user.id}
+        userName={viewerProfile?.name ?? null}
       />
     </div>
   );
