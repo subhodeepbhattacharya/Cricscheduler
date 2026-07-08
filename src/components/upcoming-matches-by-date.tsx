@@ -7,6 +7,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DeleteMatchButton } from "@/components/delete-match-button";
+import { MatchShareLink } from "@/components/match-share-link";
 import type { Match } from "@/lib/types/database";
 
 type Props = {
@@ -106,17 +107,20 @@ export function UpcomingMatchesByDate({
                           </div>
                         </div>
                       </Link>
-                      {canEditMatch && (
-                        <div className="mt-3 flex items-center gap-2 border-t border-gray-100 pt-3">
-                          <Link
-                            href={`/matches/${match.id}/edit`}
-                            className={buttonVariants({ size: "sm", variant: "secondary" })}
-                          >
-                            Edit
-                          </Link>
-                          <DeleteMatchButton matchId={match.id} matchTitle={match.title} />
-                        </div>
-                      )}
+                      <div className="mt-3 space-y-3 border-t border-gray-100 pt-3">
+                        {canEditMatch && (
+                          <div className="flex items-center gap-2">
+                            <Link
+                              href={`/matches/${match.id}/edit`}
+                              className={buttonVariants({ size: "sm", variant: "secondary" })}
+                            >
+                              Edit
+                            </Link>
+                            <DeleteMatchButton matchId={match.id} matchTitle={match.title} />
+                          </div>
+                        )}
+                        <MatchShareLink matchId={match.id} compact />
+                      </div>
                     </Card>
                   );
                 })}

@@ -3,7 +3,12 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 
-export function MatchShareLink({ matchId }: { matchId: string }) {
+type MatchShareLinkProps = {
+  matchId: string;
+  compact?: boolean;
+};
+
+export function MatchShareLink({ matchId, compact = false }: MatchShareLinkProps) {
   const [origin, setOrigin] = useState("");
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -22,6 +27,26 @@ export function MatchShareLink({ matchId }: { matchId: string }) {
     } catch {
       setError("Couldn't copy. Select and copy the link manually.");
     }
+  }
+
+  if (compact) {
+    return (
+      <div>
+        <p className="text-xs font-medium text-gray-700">Match link</p>
+        <div className="mt-2 flex items-center gap-2">
+          <input
+            readOnly
+            value={link}
+            onFocus={(e) => e.currentTarget.select()}
+            className="min-w-0 flex-1 rounded-lg border border-gray-300 bg-gray-50 px-2 py-1.5 text-xs text-gray-700"
+          />
+          <Button type="button" size="sm" onClick={handleCopy}>
+            {copied ? "Copied!" : "Copy"}
+          </Button>
+        </div>
+        {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+      </div>
+    );
   }
 
   return (
