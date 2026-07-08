@@ -102,6 +102,18 @@ export function formatMatchTime(startTime: string, endTime?: string | null): str
 
 export const DEFAULT_TEAM_A_NAME = "Team A";
 export const DEFAULT_TEAM_B_NAME = "Team B";
+export const TEAM_NAME_MAX_LENGTH = 40;
+
+export function normalizeOptionalTeamName(
+  name: string
+): { ok: true; value: string | null } | { ok: false; error: string } {
+  const trimmed = name.trim();
+  if (!trimmed) return { ok: true, value: null };
+  if (trimmed.length > TEAM_NAME_MAX_LENGTH) {
+    return { ok: false, error: `Team name must be ${TEAM_NAME_MAX_LENGTH} characters or fewer` };
+  }
+  return { ok: true, value: trimmed };
+}
 
 export function resolveTeamDisplayName(stored: string | null | undefined, fallback: string): string {
   const trimmed = stored?.trim();

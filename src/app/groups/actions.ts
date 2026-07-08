@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireAuth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { getLocalTodayDateString, normalizeUpiVpa, isValidUpiVpa } from "@/lib/utils";
+import { getLocalTodayDateString, normalizeUpiVpa, isValidUpiVpa, normalizeOptionalTeamName } from "@/lib/utils";
 import { isHostOrCoHost, isActiveMember } from "@/lib/match-logic";
 import { normalizeProfileName } from "@/lib/profile-name";
 
@@ -122,6 +122,7 @@ export async function createMatch(groupId: string, formData: FormData) {
   const supabase = await createClient();
 
   const title = formData.get("title") as string;
+  const opponentTeamNameRaw = ((formData.get("opponentTeamName") as string) || "").trim();
   const date = formData.get("date") as string;
   const startTime = formData.get("startTime") as string;
 
@@ -141,6 +142,9 @@ export async function createMatch(groupId: string, formData: FormData) {
   if (prepaymentRequired && feePerPlayer <= 0) {
     return { error: "Fee per player must be greater than ₹0 when UPI prepayment is required." };
   }
+
+  const normalizedOpponent = normalizeOptionalTeamName(opponentTeamNameRaw);
+  if (!normalizedOpponent.ok) return { error: normalizedOpponent.error };
 
   let hostUpiVpa: string | null = null;
   if (prepaymentRequired) {
@@ -170,6 +174,7 @@ export async function createMatch(groupId: string, formData: FormData) {
     fee_per_player: feePerPlayer,
     prepayment_required: prepaymentRequired,
     host_upi_vpa: hostUpiVpa,
+    team_b_name: normalizedOpponent.value,
     status: "SCHEDULED",
   });
 

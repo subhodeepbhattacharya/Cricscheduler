@@ -163,6 +163,13 @@ export function MatchForm({ mode, groupId, match }: MatchFormProps) {
         defaultValue={match?.title}
       />
       <Input
+        label="Opponent team name"
+        name="opponentTeamName"
+        placeholder="e.g. Mumbai Strikers (optional)"
+        defaultValue={match?.team_b_name ?? ""}
+        maxLength={40}
+      />
+      <Input
         label="Date"
         name="date"
         type="date"

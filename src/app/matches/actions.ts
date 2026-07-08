@@ -20,6 +20,7 @@ import {
   generateTransactionRef,
   getLocalTodayDateString,
   isMatchElapsed,
+  normalizeOptionalTeamName,
 } from "@/lib/utils";
 
 const MATCH_ELAPSED_ERROR = "This match has already started and can no longer be joined.";
@@ -415,6 +416,7 @@ export async function addParticipantToMatch(matchId: string, userId: string) {
 
 function parseMatchFormData(formData: FormData) {
   const title = (formData.get("title") as string).trim();
+  const opponentTeamNameRaw = ((formData.get("opponentTeamName") as string) || "").trim();
   const date = formData.get("date") as string;
   const startTime = formData.get("startTime") as string;
   const locationName = (formData.get("locationName") as string).trim();
@@ -427,6 +429,7 @@ function parseMatchFormData(formData: FormData) {
 
   return {
     title,
+    opponentTeamNameRaw,
     date,
     startTime,
     locationName,
@@ -466,6 +469,9 @@ export async function updateMatch(matchId: string, formData: FormData) {
   if (parsed.prepaymentRequired && parsed.feePerPlayer <= 0) {
     return { error: "Fee per player must be greater than ₹0 when UPI prepayment is required." };
   }
+
+  const normalizedOpponent = normalizeOptionalTeamName(parsed.opponentTeamNameRaw);
+  if (!normalizedOpponent.ok) return { error: normalizedOpponent.error };
 
   let hostUpiVpa: string | null = null;
   if (parsed.prepaymentRequired) {
@@ -515,6 +521,13 @@ export async function updateMatch(matchId: string, formData: FormData) {
 
     return { error: rpcError.message };
   }
+
+  const { error: teamNameError } = await supabase
+    .from("matches")
+    .update({ team_b_name: normalizedOpponent.value })
+    .eq("id", matchId);
+
+  if (teamNameError) return { error: teamNameError.message };
 
   revalidatePath(`/groups/${match.group_id}`, "page");
   revalidatePath(`/matches/${matchId}`);
