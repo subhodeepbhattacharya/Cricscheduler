@@ -3,6 +3,10 @@
 All notable changes to this project are recorded here, newest first.
 Timestamps are in IST (UTC+5:30).
 
+## 2026-07-08 14:10 IST — Fix match join gate crash for non-members
+- Normalized Supabase RPC match results so empty or malformed responses no longer skip the join gate and crash the match page in production.
+- Join-context RPC failures now show a friendly message instead of **Something went wrong**.
+
 ## 2026-07-08 13:40 IST — Match link copy on group match cards
 - Upcoming match cards on the group page now include a compact **Match link** field with **Copy**, below Edit/Delete when shown.
 

@@ -92,6 +92,7 @@ export function formatTime(timeStr: string): string {
 }
 
 export function formatMatchTime(startTime: string, endTime?: string | null): string {
+  if (!startTime) return "";
   const start = formatTime(startTime);
   if (!endTime) return start;
   const startKey = startTime.slice(0, 5);

@@ -8,15 +8,16 @@ import { RsvpActions } from "@/components/rsvp-actions";
 import { MatchTeamsDisplay } from "@/components/match-teams-display";
 import { DeleteMatchButton } from "@/components/delete-match-button";
 import { MatchShareLink } from "@/components/match-share-link";
-import { MatchJoinGate, type MatchJoinContext } from "@/components/match-join-gate";
+import { MatchJoinGate } from "@/components/match-join-gate";
+import { MatchAccessMessage } from "@/components/match-access-message";
 import { buttonVariants } from "@/components/ui/button";
 import { Badge, statusLabel, formatStatus } from "@/components/ui/badge";
+import {
+  firstRpcRow,
+  isMatchJoinContext,
+  normalizeMatchRpc,
+} from "@/lib/rpc-result";
 import type { Match, MatchParticipation, Payment } from "@/lib/types/database";
-
-function firstRpcRow<T>(data: T | T[] | null | undefined): T | null {
-  if (!data) return null;
-  return Array.isArray(data) ? (data[0] ?? null) : data;
-}
 
 export default async function MatchDetailPage({
   params,
@@ -27,26 +28,35 @@ export default async function MatchDetailPage({
   const { matchId } = await params;
   const supabase = await createClient();
 
-  const { data: rpcMatch, error: rpcError } = await supabase.rpc("get_match_for_user", {
+  const { data: rpcMatch } = await supabase.rpc("get_match_for_user", {
     p_match_id: matchId,
   });
 
-  let match = rpcMatch as Match | null;
-  if (rpcError || !match) {
+  let match = normalizeMatchRpc(rpcMatch);
+  if (!match) {
     const { data: fallbackMatch } = await supabase
       .from("matches")
       .select("*")
       .eq("id", matchId)
-      .single();
-    match = fallbackMatch as Match | null;
+      .maybeSingle();
+    match = normalizeMatchRpc(fallbackMatch);
   }
 
   if (!match) {
-    const { data: joinContext } = await supabase.rpc("get_match_join_context", {
+    const { data: joinContext, error: joinError } = await supabase.rpc("get_match_join_context", {
       p_match_id: matchId,
     });
-    const context = firstRpcRow(joinContext as MatchJoinContext | MatchJoinContext[] | null);
-    if (!context) notFound();
+
+    if (joinError) {
+      return (
+        <MatchAccessMessage
+          message="We couldn't load this match right now. Ask the group host for an invite link, then try the match link again."
+        />
+      );
+    }
+
+    const context = firstRpcRow(joinContext);
+    if (!isMatchJoinContext(context)) notFound();
     return <MatchJoinGate matchId={matchId} context={context} />;
   }
 

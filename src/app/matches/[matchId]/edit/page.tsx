@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { requireAuth } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { canManageMatch } from "@/lib/match-logic";
+import { normalizeMatchRpc } from "@/lib/rpc-result";
 import { MatchForm } from "@/components/match-form";
 import type { Match } from "@/lib/types/database";
 
@@ -15,18 +16,18 @@ export default async function EditMatchPage({
   const { matchId } = await params;
   const supabase = await createClient();
 
-  const { data: rpcMatch, error: rpcError } = await supabase.rpc("get_match_for_user", {
+  const { data: rpcMatch } = await supabase.rpc("get_match_for_user", {
     p_match_id: matchId,
   });
 
-  let match = rpcMatch as Match | null;
-  if (rpcError || !match) {
+  let match = normalizeMatchRpc(rpcMatch);
+  if (!match) {
     const { data: fallbackMatch } = await supabase
       .from("matches")
       .select("*")
       .eq("id", matchId)
-      .single();
-    match = fallbackMatch as Match | null;
+      .maybeSingle();
+    match = normalizeMatchRpc(fallbackMatch);
   }
 
   if (!match) notFound();
