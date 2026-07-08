@@ -3,6 +3,10 @@
 All notable changes to this project are recorded here, newest first.
 Timestamps are in IST (UTC+5:30).
 
+## 2026-07-08 08:39 IST — Optional opponent team name on create/edit match
+- Create and edit match forms now include an optional **Opponent team name** field under match title (max 40 characters).
+- Value is stored in the existing `team_b_name` column; blank leaves the default **Team B** label on match and manage pages.
+
 ## 2026-07-07 — Refresh About page for recent features
 - Updated `/about` for co-host promotion, per-match UPI, share match link, manual add-player, match creator on cards, and required profile names.
 
