@@ -3,6 +3,9 @@
 All notable changes to this project are recorded here, newest first.
 Timestamps are in IST (UTC+5:30).
 
+## 2026-07-08 15:19 IST — Remove WhatsApp link from match join gate
+- Non-members who open a shared match link no longer see an **Open the WhatsApp group** link on the join card, since WhatsApp is optional for groups.
+
 ## 2026-07-08 14:10 IST — Fix match join gate crash for non-members
 - Normalized Supabase RPC match results so empty or malformed responses no longer skip the join gate and crash the match page in production.
 - Join-context RPC failures now show a friendly message instead of **Something went wrong**.

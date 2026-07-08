@@ -42,16 +42,6 @@ export function MatchJoinGate({ matchId, context }: Props) {
             The host will review each request and approve people who are part of the group&apos;s
             WhatsApp chat.
           </p>
-          {context.whatsapp_group_link && (
-            <a
-              href={context.whatsapp_group_link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-2 inline-block text-xs font-medium text-green-700 hover:underline"
-            >
-              Open the WhatsApp group →
-            </a>
-          )}
         </div>
 
         <div className="mt-5">
