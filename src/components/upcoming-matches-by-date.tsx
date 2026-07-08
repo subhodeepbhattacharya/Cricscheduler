@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { formatDate, formatMatchTime, formatCurrency } from "@/lib/utils";
+import { formatDate, formatMatchTime, formatMatchFee } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -100,11 +100,9 @@ export function UpcomingMatchesByDate({
                             <Badge variant={isFull ? "standby" : "confirmed"}>
                               {confirmed} / {match.max_players}
                             </Badge>
-                            {Number(match.fee_per_player) > 0 && (
-                              <p className="mt-1 text-xs text-gray-500">
-                                {formatCurrency(Number(match.fee_per_player))}
-                              </p>
-                            )}
+                            <p className="mt-1 text-xs text-gray-500">
+                              {formatMatchFee(Number(match.fee_per_player))}
+                            </p>
                           </div>
                         </div>
                       </Link>

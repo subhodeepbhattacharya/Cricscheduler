@@ -65,6 +65,12 @@ export function formatCurrency(amount: number): string {
   }).format(amount);
 }
 
+export function formatMatchFee(feePerPlayer: number): string {
+  return Number(feePerPlayer) > 0
+    ? formatCurrency(Number(feePerPlayer))
+    : "Fee: Managed offline";
+}
+
 export function formatDate(dateStr: string): string {
   return new Date(dateStr + "T00:00:00").toLocaleDateString("en-IN", {
     weekday: "short",

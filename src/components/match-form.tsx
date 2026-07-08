@@ -13,16 +13,48 @@ import {
 import { getLocalTodayDateString } from "@/lib/utils";
 import type { Match } from "@/lib/types/database";
 
-// Times in 15-minute increments (00, 15, 30, 45) for the whole day.
-const TIME_OPTIONS = Array.from({ length: 24 * 4 }, (_, i) => {
-  const hour24 = Math.floor(i / 4);
-  const minute = (i % 4) * 15;
-  const value = `${String(hour24).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+// Times on the hour or half-hour (e.g. 9 AM, 9:30 AM, 10 AM).
+function formatTimeOptionLabel(hour24: number, minute: number): string {
   const period = hour24 < 12 ? "AM" : "PM";
   const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
-  const label = `${hour12}:${String(minute).padStart(2, "0")} ${period}`;
-  return { value, label };
-});
+  return minute === 0
+    ? `${hour12} ${period}`
+    : `${hour12}:${String(minute).padStart(2, "0")} ${period}`;
+}
+
+// Playable window: 6 AM through 9 PM, on the hour or half-hour.
+const EARLIEST_MATCH_HOUR = 6;
+const LATEST_MATCH_HOUR = 21;
+
+const TIME_OPTIONS = (() => {
+  const options: { value: string; label: string }[] = [];
+  for (let hour24 = EARLIEST_MATCH_HOUR; hour24 <= LATEST_MATCH_HOUR; hour24++) {
+    const minutes = hour24 === LATEST_MATCH_HOUR ? [0] : [0, 30];
+    for (const minute of minutes) {
+      const value = `${String(hour24).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+      options.push({ value, label: formatTimeOptionLabel(hour24, minute) });
+    }
+  }
+  return options;
+})();
+
+function getTimeOptions(existingValue?: string) {
+  if (!existingValue || TIME_OPTIONS.some((opt) => opt.value === existingValue)) {
+    return TIME_OPTIONS;
+  }
+
+  const [hourStr, minuteStr] = existingValue.split(":");
+  const hour24 = Number(hourStr);
+  const minute = Number(minuteStr);
+  if (Number.isNaN(hour24) || Number.isNaN(minute)) {
+    return TIME_OPTIONS;
+  }
+
+  return [
+    ...TIME_OPTIONS,
+    { value: existingValue, label: formatTimeOptionLabel(hour24, minute) },
+  ].sort((a, b) => a.value.localeCompare(b.value));
+}
 
 type MatchFormProps =
   | { mode: "create"; groupId: string; match?: never }
@@ -59,6 +91,8 @@ export function MatchForm({ mode, groupId, match }: MatchFormProps) {
   const locationAddress = selectedLocation?.locationAddress ?? manualLocation.address;
   const googleMapsLink = selectedLocation?.googleMapsLink ?? "";
 
+  const startTimeDefault = match?.start_time?.slice(0, 5) ?? "";
+  const timeOptions = getTimeOptions(startTimeDefault || undefined);
   const playersNum = parseInt(maxPlayers, 10);
   const totalNum = parseFloat(totalAmount);
   // Round each share UP to the nearest paisa so the collected total always
@@ -144,13 +178,13 @@ export function MatchForm({ mode, groupId, match }: MatchFormProps) {
           id="startTime"
           name="startTime"
           required
-          defaultValue={match?.start_time?.slice(0, 5) ?? ""}
+          defaultValue={startTimeDefault}
           className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
         >
           <option value="" disabled>
             Select a time
           </option>
-          {TIME_OPTIONS.map((opt) => (
+          {timeOptions.map((opt) => (
             <option key={opt.value} value={opt.value}>
               {opt.label}
             </option>

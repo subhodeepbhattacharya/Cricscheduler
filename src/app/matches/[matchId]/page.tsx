@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { requireAuth } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { getConfirmedCount, canManageMatch } from "@/lib/match-logic";
-import { formatDate, formatMatchTime, formatCurrency, isMatchElapsed } from "@/lib/utils";
+import { formatDate, formatMatchTime, formatMatchFee, isMatchElapsed } from "@/lib/utils";
 import { RsvpActions } from "@/components/rsvp-actions";
 import { MatchTeamsDisplay } from "@/components/match-teams-display";
 import { DeleteMatchButton } from "@/components/delete-match-button";
@@ -159,12 +159,18 @@ export default async function MatchDetailPage({
             <p className="text-xs text-gray-500">confirmed</p>
           </div>
           <div>
-            <p className="text-xs font-medium uppercase text-gray-400">Fee</p>
-            <p className="text-lg font-semibold text-gray-900">
-              {Number(typedMatch.fee_per_player) > 0
-                ? formatCurrency(Number(typedMatch.fee_per_player))
-                : "Free"}
-            </p>
+            {Number(typedMatch.fee_per_player) > 0 ? (
+              <>
+                <p className="text-xs font-medium uppercase text-gray-400">Fee</p>
+                <p className="text-lg font-semibold text-gray-900">
+                  {formatMatchFee(Number(typedMatch.fee_per_player))}
+                </p>
+              </>
+            ) : (
+              <p className="text-sm font-semibold text-gray-900">
+                {formatMatchFee(Number(typedMatch.fee_per_player))}
+              </p>
+            )}
             {typedMatch.prepayment_required && (
               <>
                 <p className="text-xs text-amber-600">Prepayment required</p>

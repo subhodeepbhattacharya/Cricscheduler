@@ -23,22 +23,19 @@ function TeamColumn({
   label,
   accent,
   players,
-  otherTeamLabel,
   loadingId,
-  onAssign,
+  onUnassign,
 }: {
   label: string;
   accent: "blue" | "green";
   players: ParticipationWithUser[];
-  otherTeamLabel: string;
   loadingId: string | null;
-  onAssign: (participationId: string, team: MatchTeam | null) => void;
+  onUnassign: (participationId: string) => void;
 }) {
   const headerClass =
     accent === "blue"
       ? "border-blue-200 bg-blue-50 text-blue-900"
       : "border-green-200 bg-green-50 text-green-900";
-  const moveTarget: MatchTeam = accent === "blue" ? "B" : "A";
 
   return (
     <div className="min-w-0 flex-1 rounded-xl border border-gray-200 bg-white">
@@ -55,32 +52,23 @@ function TeamColumn({
               key={p.id}
               className="flex items-center justify-between gap-2 rounded-lg border border-gray-100 bg-gray-50 px-2 py-1.5"
             >
-              <span className="min-w-0 truncate text-sm font-medium text-gray-900">
+              <span
+                className="min-w-0 truncate text-sm font-medium text-gray-900"
+                title={p.user.name}
+              >
                 {p.user.name}
               </span>
-              <div className="flex shrink-0 gap-1">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  className="max-w-[5.5rem] truncate px-2 text-xs"
-                  title={`Move to ${otherTeamLabel}`}
-                  loading={loadingId === p.id}
-                  onClick={() => onAssign(p.id, moveTarget)}
-                >
-                  → {otherTeamLabel}
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  className="px-2 text-xs text-gray-500"
-                  loading={loadingId === p.id}
-                  onClick={() => onAssign(p.id, null)}
-                >
-                  ✕
-                </Button>
-              </div>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                className="shrink-0 px-2 text-xs text-gray-500"
+                title="Unassign player"
+                loading={loadingId === p.id}
+                onClick={() => onUnassign(p.id)}
+              >
+                ✕
+              </Button>
             </li>
           ))
         )}
@@ -247,17 +235,15 @@ export function TeamAssignment({
               label={displayA}
               accent="blue"
               players={teamA}
-              otherTeamLabel={displayB}
               loadingId={loadingId}
-              onAssign={handleAssign}
+              onUnassign={(id) => handleAssign(id, null)}
             />
             <TeamColumn
               label={displayB}
               accent="green"
               players={teamB}
-              otherTeamLabel={displayA}
               loadingId={loadingId}
-              onAssign={handleAssign}
+              onUnassign={(id) => handleAssign(id, null)}
             />
           </div>
 
@@ -272,7 +258,10 @@ export function TeamAssignment({
                     key={p.id}
                     className="flex items-center justify-between gap-2 rounded-lg border border-gray-100 bg-gray-50 px-2 py-1.5"
                   >
-                    <span className="min-w-0 truncate text-sm font-medium text-gray-900">
+                    <span
+                      className="min-w-0 truncate text-sm font-medium text-gray-900"
+                      title={p.user.name}
+                    >
                       {p.user.name}
                     </span>
                     <div className="flex shrink-0 gap-1">
@@ -281,6 +270,7 @@ export function TeamAssignment({
                         size="sm"
                         variant="secondary"
                         className="max-w-[7rem] truncate"
+                        title={`Assign to ${displayA}`}
                         loading={loadingId === p.id}
                         onClick={() => handleAssign(p.id, "A")}
                       >
@@ -291,6 +281,7 @@ export function TeamAssignment({
                         size="sm"
                         variant="secondary"
                         className="max-w-[7rem] truncate"
+                        title={`Assign to ${displayB}`}
                         loading={loadingId === p.id}
                         onClick={() => handleAssign(p.id, "B")}
                       >
