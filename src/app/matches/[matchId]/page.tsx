@@ -8,9 +8,15 @@ import { RsvpActions } from "@/components/rsvp-actions";
 import { MatchTeamsDisplay } from "@/components/match-teams-display";
 import { DeleteMatchButton } from "@/components/delete-match-button";
 import { MatchShareLink } from "@/components/match-share-link";
+import { MatchJoinGate, type MatchJoinContext } from "@/components/match-join-gate";
 import { buttonVariants } from "@/components/ui/button";
 import { Badge, statusLabel, formatStatus } from "@/components/ui/badge";
 import type { Match, MatchParticipation, Payment } from "@/lib/types/database";
+
+function firstRpcRow<T>(data: T | T[] | null | undefined): T | null {
+  if (!data) return null;
+  return Array.isArray(data) ? (data[0] ?? null) : data;
+}
 
 export default async function MatchDetailPage({
   params,
@@ -35,7 +41,14 @@ export default async function MatchDetailPage({
     match = fallbackMatch as Match | null;
   }
 
-  if (!match) notFound();
+  if (!match) {
+    const { data: joinContext } = await supabase.rpc("get_match_join_context", {
+      p_match_id: matchId,
+    });
+    const context = firstRpcRow(joinContext as MatchJoinContext | MatchJoinContext[] | null);
+    if (!context) notFound();
+    return <MatchJoinGate matchId={matchId} context={context} />;
+  }
 
   const { data: group } = await supabase
     .from("cricket_groups")

@@ -34,7 +34,10 @@ export default async function GroupsPage() {
 
       {groups.length === 0 ? (
         <div className="mt-12 text-center">
-          <p className="text-gray-500">You haven&apos;t joined any groups yet.</p>
+          <p className="mx-auto max-w-sm text-gray-500">
+            You haven&apos;t joined any groups yet. Create your first group or ask your WhatsApp
+            group host / admin to send you a group link to join.
+          </p>
           <Link href="/groups/new" className={buttonVariants({ className: "mt-4" })}>
             Create your first group
           </Link>

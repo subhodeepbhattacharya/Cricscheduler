@@ -3,6 +3,10 @@
 All notable changes to this project are recorded here, newest first.
 Timestamps are in IST (UTC+5:30).
 
+## 2026-07-08 13:19 IST — Match link join gate and clearer empty groups message
+- Signed-in users who open a shared match link without group access now see **Join {group} to view this match** with the invite/request flow instead of a 404 (`027_match_join_gate.sql`, `MatchJoinGate`).
+- **My Groups** empty state now tells new users to create a group or ask their WhatsApp host for a group link.
+
 ## 2026-07-08 08:39 IST — Optional opponent team name on create/edit match
 - Create and edit match forms now include an optional **Opponent team name** field under match title (max 40 characters).
 - Value is stored in the existing `team_b_name` column; blank leaves the default **Team B** label on match and manage pages.
